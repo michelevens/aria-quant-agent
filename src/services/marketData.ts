@@ -1,4 +1,4 @@
-import type { OHLCV, Quote, TimeRange, Interval } from '@/types/market'
+import type { OHLCV, Quote, NewsItem, TimeRange, Interval } from '@/types/market'
 
 const PROXY = 'https://corsproxy.io/?url='
 const YAHOO_BASE = 'https://query1.finance.yahoo.com'
@@ -128,4 +128,41 @@ export async function fetchMarketIndices(): Promise<Quote[]> {
     'BTC-USD', // Bitcoin
     'ETH-USD', // Ethereum
   ])
+}
+
+function guessSentiment(title: string): 'bullish' | 'bearish' | 'neutral' {
+  const lower = title.toLowerCase()
+  const bullish = ['surge', 'rally', 'gain', 'jump', 'soar', 'rise', 'bull', 'record', 'beat', 'upgrade', 'buy', 'boom', 'breakout', 'high', 'profit', 'growth', 'recover']
+  const bearish = ['crash', 'drop', 'fall', 'plunge', 'sink', 'bear', 'sell', 'loss', 'downgrade', 'decline', 'slump', 'cut', 'fear', 'warn', 'miss', 'risk', 'layoff', 'recession']
+  const bScore = bullish.filter((w) => lower.includes(w)).length
+  const sScore = bearish.filter((w) => lower.includes(w)).length
+  if (bScore > sScore) return 'bullish'
+  if (sScore > bScore) return 'bearish'
+  return 'neutral'
+}
+
+export async function fetchNews(symbols: string[] = []): Promise<NewsItem[]> {
+  const query = symbols.length > 0 ? symbols.slice(0, 5).join(',') : 'stock market'
+  const url = `${PROXY}${encodeURIComponent(`https://query1.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(query)}&newsCount=20&quotesCount=0`)}`
+
+  const res = await fetch(url)
+  if (!res.ok) throw new Error('Failed to fetch news')
+
+  const json = await res.json()
+  const news = json.news ?? []
+
+  return news.map((item: Record<string, unknown>, i: number) => {
+    const title = (item.title ?? '') as string
+    const relatedTickers = (item.relatedTickers ?? []) as string[]
+    return {
+      id: `news-${i}-${Date.now()}`,
+      title,
+      summary: (item.summary ?? '') as string,
+      url: (item.link ?? '#') as string,
+      source: (item.publisher ?? 'Unknown') as string,
+      publishedAt: ((item.providerPublishTime as number) ?? 0) * 1000,
+      relatedSymbols: relatedTickers,
+      sentiment: guessSentiment(title),
+    }
+  })
 }

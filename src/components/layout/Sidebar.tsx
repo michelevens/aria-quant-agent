@@ -29,7 +29,7 @@ const bottomItems = [
   { to: '/settings', icon: Settings, label: 'Settings' },
 ]
 
-export function Sidebar() {
+export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <aside className="flex h-full w-56 flex-col border-r border-border bg-card">
       <div className="flex items-center gap-2 border-b border-border px-4 py-4">
@@ -49,6 +49,7 @@ export function Sidebar() {
               key={item.to}
               to={item.to}
               end={item.to === '/'}
+              onClick={onNavigate}
               className={({ isActive }) =>
                 `flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
                   isActive
@@ -69,6 +70,7 @@ export function Sidebar() {
           <NavLink
             key={item.to}
             to={item.to}
+            onClick={onNavigate}
             className={({ isActive }) =>
               `flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
                 isActive

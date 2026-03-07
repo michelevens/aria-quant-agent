@@ -3,6 +3,7 @@ import { PortfolioSummary } from '@/components/trading/PortfolioSummary'
 import { PositionsTable } from '@/components/trading/PositionsTable'
 import { RiskMetrics } from '@/components/trading/RiskMetrics'
 import { CorrelationHeatmap } from '@/components/trading/CorrelationHeatmap'
+import { EquityCurve } from '@/components/trading/EquityCurve'
 import { usePortfolioContext } from '@/contexts/PortfolioContext'
 import {
   PieChart,
@@ -35,6 +36,7 @@ export function Portfolio() {
   return (
     <div className="space-y-4">
       <PortfolioSummary />
+      <EquityCurve />
 
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">

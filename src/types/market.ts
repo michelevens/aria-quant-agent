@@ -101,5 +101,16 @@ export interface CorrelationMatrix {
   matrix: number[][]
 }
 
+export interface NewsItem {
+  id: string
+  title: string
+  summary: string
+  url: string
+  source: string
+  publishedAt: number
+  relatedSymbols: string[]
+  sentiment: 'bullish' | 'bearish' | 'neutral'
+}
+
 export type TimeRange = '1D' | '5D' | '1M' | '3M' | '6M' | '1Y' | '2Y' | '5Y' | 'MAX'
 export type Interval = '1m' | '5m' | '15m' | '1h' | '1d' | '1wk' | '1mo'

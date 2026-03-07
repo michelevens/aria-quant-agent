@@ -11,4 +11,14 @@ export default defineConfig({
     },
   },
   base: '/aria-quant-agent/',
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          recharts: ['recharts'],
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+        },
+      },
+    },
+  },
 })
