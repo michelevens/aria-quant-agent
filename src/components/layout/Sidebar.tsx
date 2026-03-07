@@ -50,6 +50,11 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           <h1 className="text-sm font-bold tracking-tight">Aria Quant</h1>
           <p className="text-xs text-muted-foreground">Trading Agent</p>
         </div>
+        <div className="mx-1 h-8 w-px bg-border" />
+        <div>
+          <p className="text-xs font-bold tracking-tight" style={{ color: '#d4a017' }}>Acsyom</p>
+          <p className="text-xs" style={{ color: '#c49a15' }}>Analytics</p>
+        </div>
       </div>
 
       <ScrollArea className="flex-1 px-2 py-2">
