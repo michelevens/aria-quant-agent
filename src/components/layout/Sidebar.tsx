@@ -17,6 +17,8 @@ import {
   LayoutGrid,
   BookOpen,
   BarChart3,
+  Calendar,
+  Puzzle,
 } from 'lucide-react'
 
 const navItems = [
@@ -35,6 +37,8 @@ const navItems = [
   { to: '/heatmap', icon: LayoutGrid, label: 'Heat Map' },
   { to: '/journal', icon: BookOpen, label: 'Journal' },
   { to: '/analytics', icon: BarChart3, label: 'Analytics' },
+  { to: '/calendar', icon: Calendar, label: 'Calendar' },
+  { to: '/strategy', icon: Puzzle, label: 'Strategy' },
 ]
 
 const bottomItems = [

@@ -28,6 +28,9 @@ const RiskDashboard = lazy(() => import('@/pages/RiskDashboard').then((m) => ({ 
 const HeatMap = lazy(() => import('@/pages/HeatMap').then((m) => ({ default: m.HeatMap })))
 const Journal = lazy(() => import('@/pages/Journal').then((m) => ({ default: m.Journal })))
 const Analytics = lazy(() => import('@/pages/Analytics').then((m) => ({ default: m.Analytics })))
+const EconomicCalendar = lazy(() => import('@/pages/EconomicCalendar').then((m) => ({ default: m.EconomicCalendar })))
+const StrategyBuilder = lazy(() => import('@/pages/StrategyBuilder').then((m) => ({ default: m.StrategyBuilder })))
+const Profile = lazy(() => import('@/pages/Profile').then((m) => ({ default: m.Profile })))
 
 function PageLoader() {
   return (
@@ -66,6 +69,9 @@ function ProtectedRoutes() {
             <Route path="heatmap" element={<HeatMap />} />
             <Route path="journal" element={<Journal />} />
             <Route path="analytics" element={<Analytics />} />
+            <Route path="calendar" element={<EconomicCalendar />} />
+            <Route path="strategy" element={<StrategyBuilder />} />
+            <Route path="profile" element={<Profile />} />
             <Route path="settings" element={<Settings />} />
           </Route>
         </Routes>

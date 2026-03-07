@@ -1,8 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { PortfolioSummary } from '@/components/trading/PortfolioSummary'
-import { exportToCSV } from '@/lib/csv'
-import { Download } from 'lucide-react'
+import { exportToCSV, importCSVFile } from '@/lib/csv'
+import { Download, Upload } from 'lucide-react'
+import { toast } from 'sonner'
 import { PositionsTable } from '@/components/trading/PositionsTable'
 import { RiskMetrics } from '@/components/trading/RiskMetrics'
 import { CorrelationHeatmap } from '@/components/trading/CorrelationHeatmap'
@@ -30,7 +31,27 @@ const COLORS = [
 ]
 
 export function Portfolio() {
-  const { holdings } = usePortfolioContext()
+  const { holdings, addHolding } = usePortfolioContext()
+
+  const handleImportCSV = async () => {
+    const rows = await importCSVFile()
+    if (rows.length === 0) return
+    let imported = 0
+    for (const row of rows) {
+      const symbol = (row.Symbol ?? row.symbol ?? '').toUpperCase().trim()
+      const quantity = parseFloat(row.Quantity ?? row.quantity ?? '0')
+      const avgCost = parseFloat(row.AvgCost ?? row.avgCost ?? row.avg_cost ?? row.Cost ?? row.cost ?? '0')
+      if (symbol && quantity > 0 && avgCost > 0) {
+        addHolding({ symbol, quantity, avgCost })
+        imported++
+      }
+    }
+    if (imported > 0) {
+      toast.success(`Imported ${imported} holding${imported > 1 ? 's' : ''} from CSV`)
+    } else {
+      toast.error('No valid holdings found. CSV needs Symbol, Quantity, and AvgCost columns.')
+    }
+  }
 
   const allocationData = holdings.map((h) => ({
     name: h.symbol,
@@ -57,12 +78,18 @@ export function Portfolio() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <PortfolioSummary />
-        <Button variant="outline" size="sm" className="gap-1 text-xs" onClick={handleExportPortfolio}>
-          <Download className="h-3.5 w-3.5" />
-          Export CSV
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" className="gap-1 text-xs" onClick={handleImportCSV}>
+            <Upload className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Import</span> CSV
+          </Button>
+          <Button variant="outline" size="sm" className="gap-1 text-xs" onClick={handleExportPortfolio}>
+            <Download className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Export</span> CSV
+          </Button>
+        </div>
       </div>
       <EquityCurve />
 

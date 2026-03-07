@@ -1,5 +1,6 @@
 import { useMarketIndices } from '@/hooks/useMarketData'
 import { MARKET_INDICES } from '@/data/mockData'
+import { usePriceTick } from '@/hooks/usePriceTick'
 
 const DISPLAY_NAMES: Record<string, string> = {
   '^GSPC': 'S&P 500',
@@ -12,10 +13,32 @@ const DISPLAY_NAMES: Record<string, string> = {
   'ETH-USD': 'ETH',
 }
 
+function TickerItem({ symbol, value, change, changePercent }: {
+  symbol: string
+  value: number
+  change: number
+  changePercent: number
+}) {
+  const tickClass = usePriceTick(value)
+
+  return (
+    <div className={`flex shrink-0 items-center gap-2 rounded px-1.5 py-0.5 ${tickClass}`}>
+      <span className="font-medium text-foreground">{symbol}</span>
+      <span className="text-muted-foreground">
+        {value.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+      </span>
+      <span className={change >= 0 ? 'text-emerald-500' : 'text-red-500'}>
+        {change >= 0 ? '+' : ''}
+        {change.toFixed(2)} ({changePercent >= 0 ? '+' : ''}
+        {changePercent.toFixed(2)}%)
+      </span>
+    </div>
+  )
+}
+
 export function TickerBar() {
   const { indices, loading } = useMarketIndices()
 
-  // Fall back to mock data while loading or on error
   const displayData = indices.length > 0
     ? indices.map((q) => ({
         symbol: DISPLAY_NAMES[q.symbol] ?? q.symbol,
@@ -31,24 +54,12 @@ export function TickerBar() {
       }))
 
   return (
-    <div className="flex items-center gap-6 overflow-x-auto border-b border-border bg-card px-4 py-2 text-xs">
+    <div className="flex items-center gap-4 overflow-x-auto border-b border-border bg-card px-4 py-1.5 text-xs">
       {loading && (
         <span className="animate-pulse text-muted-foreground">Loading market data...</span>
       )}
       {displayData.map((idx) => (
-        <div key={idx.symbol} className="flex shrink-0 items-center gap-2">
-          <span className="font-medium text-foreground">{idx.symbol}</span>
-          <span className="text-muted-foreground">
-            {idx.value.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-          </span>
-          <span
-            className={idx.change >= 0 ? 'text-emerald-500' : 'text-red-500'}
-          >
-            {idx.change >= 0 ? '+' : ''}
-            {idx.change.toFixed(2)} ({idx.changePercent >= 0 ? '+' : ''}
-            {idx.changePercent.toFixed(2)}%)
-          </span>
-        </div>
+        <TickerItem key={idx.symbol} {...idx} />
       ))}
     </div>
   )

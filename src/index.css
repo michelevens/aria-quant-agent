@@ -173,3 +173,19 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
 }
+
+/* Price tick flash animations */
+@keyframes tick-up {
+  0% { background-color: rgba(16, 185, 129, 0.3); }
+  100% { background-color: transparent; }
+}
+@keyframes tick-down {
+  0% { background-color: rgba(239, 68, 68, 0.3); }
+  100% { background-color: transparent; }
+}
+.tick-up {
+  animation: tick-up 0.8s ease-out;
+}
+.tick-down {
+  animation: tick-down 0.8s ease-out;
+}

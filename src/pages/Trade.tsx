@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { PriceChart } from '@/components/trading/PriceChart'
 import { TechnicalPanel } from '@/components/trading/TechnicalPanel'
 import { OrderPanel } from '@/components/trading/OrderPanel'
@@ -12,7 +13,8 @@ import { usePortfolioContext } from '@/contexts/PortfolioContext'
 
 export function Trade() {
   const { holdings } = usePortfolioContext()
-  const [symbol, setSymbol] = useState('NVDA')
+  const [searchParams] = useSearchParams()
+  const [symbol, setSymbol] = useState(searchParams.get('symbol') ?? 'NVDA')
   const [inputSymbol, setInputSymbol] = useState('')
 
   const quickSymbols = [...new Set([...holdings.map((h) => h.symbol), 'SPY', 'QQQ'])].slice(0, 10)

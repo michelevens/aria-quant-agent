@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input'
 import {
   LayoutDashboard, TrendingUp, Briefcase, LineChart, Eye, ListOrdered,
   Search, Newspaper, Bot, Settings, FlaskConical, Bell, Shield, LayoutGrid,
-  BookOpen, BarChart3,
+  BookOpen, BarChart3, Calendar, Puzzle,
 } from 'lucide-react'
 
 interface CommandItem {
@@ -44,6 +44,8 @@ export function CommandPalette() {
     { id: 'heatmap', label: 'Heat Map', icon: <LayoutGrid className="h-4 w-4" />, action: () => nav('/heatmap'), keywords: ['sector', 'performance'] },
     { id: 'journal', label: 'Trade Journal', icon: <BookOpen className="h-4 w-4" />, action: () => nav('/journal'), keywords: ['log', 'diary', 'history'] },
     { id: 'analytics', label: 'Performance Analytics', icon: <BarChart3 className="h-4 w-4" />, action: () => nav('/analytics'), keywords: ['returns', 'sharpe', 'monthly'] },
+    { id: 'calendar', label: 'Economic Calendar', icon: <Calendar className="h-4 w-4" />, action: () => nav('/calendar'), keywords: ['economic', 'fomc', 'cpi', 'nfp', 'events'] },
+    { id: 'strategy', label: 'Strategy Builder', icon: <Puzzle className="h-4 w-4" />, action: () => nav('/strategy'), keywords: ['strategy', 'builder', 'rules', 'conditions'] },
     { id: 'settings', label: 'Settings', icon: <Settings className="h-4 w-4" />, action: () => nav('/settings'), keywords: ['config', 'api', 'theme'] },
   ]
 
