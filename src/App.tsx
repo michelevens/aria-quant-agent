@@ -7,6 +7,8 @@ import { AuthProvider, useAuth } from '@/contexts/AuthContext'
 import { ThemeProvider } from '@/contexts/ThemeContext'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { Toaster } from '@/components/ui/sonner'
+import { CommandPalette } from '@/components/CommandPalette'
 import { Login } from '@/pages/Login'
 import { Loader2 } from 'lucide-react'
 
@@ -25,6 +27,7 @@ const Alerts = lazy(() => import('@/pages/Alerts').then((m) => ({ default: m.Ale
 const RiskDashboard = lazy(() => import('@/pages/RiskDashboard').then((m) => ({ default: m.RiskDashboard })))
 const HeatMap = lazy(() => import('@/pages/HeatMap').then((m) => ({ default: m.HeatMap })))
 const Journal = lazy(() => import('@/pages/Journal').then((m) => ({ default: m.Journal })))
+const Analytics = lazy(() => import('@/pages/Analytics').then((m) => ({ default: m.Analytics })))
 
 function PageLoader() {
   return (
@@ -44,6 +47,7 @@ function ProtectedRoutes() {
   return (
     <PortfolioProvider>
       <TradingProvider>
+      <CommandPalette />
       <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route element={<AppLayout />}>
@@ -61,6 +65,7 @@ function ProtectedRoutes() {
             <Route path="risk" element={<RiskDashboard />} />
             <Route path="heatmap" element={<HeatMap />} />
             <Route path="journal" element={<Journal />} />
+            <Route path="analytics" element={<Analytics />} />
             <Route path="settings" element={<Settings />} />
           </Route>
         </Routes>
@@ -90,6 +95,7 @@ function App() {
         <AuthProvider>
           <AuthGate />
         </AuthProvider>
+        <Toaster />
       </TooltipProvider>
       </ThemeProvider>
       </ErrorBoundary>

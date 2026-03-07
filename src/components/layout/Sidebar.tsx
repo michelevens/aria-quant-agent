@@ -16,6 +16,7 @@ import {
   Shield,
   LayoutGrid,
   BookOpen,
+  BarChart3,
 } from 'lucide-react'
 
 const navItems = [
@@ -33,6 +34,7 @@ const navItems = [
   { to: '/risk', icon: Shield, label: 'Risk' },
   { to: '/heatmap', icon: LayoutGrid, label: 'Heat Map' },
   { to: '/journal', icon: BookOpen, label: 'Journal' },
+  { to: '/analytics', icon: BarChart3, label: 'Analytics' },
 ]
 
 const bottomItems = [

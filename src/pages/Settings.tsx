@@ -19,19 +19,37 @@ import {
   removeAlphaVantageKey,
   getAlphaVantageKey,
 } from '@/services/alphaVantage'
+import {
+  isFinnhubConnected,
+  validateFinnhubKey,
+  setFinnhubKey,
+  removeFinnhubKey,
+  getFinnhubKey,
+} from '@/services/finnhub'
 import { CheckCircle2, Loader2, XCircle, ExternalLink } from 'lucide-react'
 
 export function Settings() {
   const { theme, setTheme } = useTheme()
+
+  // Alpha Vantage
   const [avKey, setAvKey] = useState('')
   const [avConnected, setAvConnected] = useState(isAlphaVantageConnected)
   const [avValidating, setAvValidating] = useState(false)
   const [avError, setAvError] = useState<string | null>(null)
   const [avSuccess, setAvSuccess] = useState(false)
 
+  // Finnhub
+  const [fhKey, setFhKey] = useState('')
+  const [fhConnected, setFhConnected] = useState(isFinnhubConnected)
+  const [fhValidating, setFhValidating] = useState(false)
+  const [fhError, setFhError] = useState<string | null>(null)
+  const [fhSuccess, setFhSuccess] = useState(false)
+
   useEffect(() => {
     const key = getAlphaVantageKey()
     if (key) setAvKey(key)
+    const fk = getFinnhubKey()
+    if (fk) setFhKey(fk)
   }, [])
 
   const handleConnectAV = async () => {
@@ -58,6 +76,32 @@ export function Settings() {
     setAvConnected(false)
     setAvError(null)
     setAvSuccess(false)
+  }
+
+  const handleConnectFH = async () => {
+    if (!fhKey.trim()) return
+    setFhValidating(true)
+    setFhError(null)
+    setFhSuccess(false)
+
+    const valid = await validateFinnhubKey(fhKey.trim())
+    if (valid) {
+      setFinnhubKey(fhKey.trim())
+      setFhConnected(true)
+      setFhSuccess(true)
+      setTimeout(() => setFhSuccess(false), 3000)
+    } else {
+      setFhError('Invalid API key. Please check your key.')
+    }
+    setFhValidating(false)
+  }
+
+  const handleDisconnectFH = () => {
+    removeFinnhubKey()
+    setFhKey('')
+    setFhConnected(false)
+    setFhError(null)
+    setFhSuccess(false)
   }
 
   return (
@@ -104,45 +148,28 @@ export function Settings() {
                 onKeyDown={(e) => { if (e.key === 'Enter') handleConnectAV() }}
               />
               {avConnected ? (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-8 text-xs text-red-500"
-                  onClick={handleDisconnectAV}
-                >
+                <Button size="sm" variant="outline" className="h-8 text-xs text-red-500" onClick={handleDisconnectAV}>
                   Disconnect
                 </Button>
               ) : (
-                <Button
-                  size="sm"
-                  className="h-8 text-xs"
-                  onClick={handleConnectAV}
-                  disabled={avValidating || !avKey.trim()}
-                >
+                <Button size="sm" className="h-8 text-xs" onClick={handleConnectAV} disabled={avValidating || !avKey.trim()}>
                   {avValidating ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Connect'}
                 </Button>
               )}
             </div>
             {avError && (
               <div className="flex items-center gap-1 text-xs text-red-500">
-                <XCircle className="h-3 w-3" />
-                {avError}
+                <XCircle className="h-3 w-3" />{avError}
               </div>
             )}
             {avSuccess && (
               <div className="flex items-center gap-1 text-xs text-emerald-500">
-                <CheckCircle2 className="h-3 w-3" />
-                Alpha Vantage connected successfully!
+                <CheckCircle2 className="h-3 w-3" />Alpha Vantage connected successfully!
               </div>
             )}
             <p className="text-xs text-muted-foreground">
               Free key: 25 requests/day.{' '}
-              <a
-                href="https://www.alphavantage.co/support/#api-key"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-0.5 text-primary hover:underline"
-              >
+              <a href="https://www.alphavantage.co/support/#api-key" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 text-primary hover:underline">
                 Get a free key <ExternalLink className="h-2.5 w-2.5" />
               </a>
             </p>
@@ -161,13 +188,69 @@ export function Settings() {
           )}
 
           <Separator />
+
+          {/* Finnhub */}
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium">Finnhub</p>
-              <p className="text-xs text-muted-foreground">Real-time quotes & news</p>
+              <p className="text-xs text-muted-foreground">Real-time quotes, company news & analyst recommendations</p>
             </div>
-            <Badge variant="outline" className="text-xs">Coming Soon</Badge>
+            {fhConnected ? (
+              <Badge className="bg-emerald-600 text-xs">Connected</Badge>
+            ) : (
+              <Badge variant="outline" className="text-xs">Not Connected</Badge>
+            )}
           </div>
+          <div className="space-y-2">
+            <label className="text-xs text-muted-foreground">API Key</label>
+            <div className="flex gap-2">
+              <Input
+                value={fhKey}
+                onChange={(e) => setFhKey(e.target.value)}
+                placeholder="Enter your Finnhub API key"
+                className="h-8 text-sm"
+                type={fhConnected ? 'password' : 'text'}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleConnectFH() }}
+              />
+              {fhConnected ? (
+                <Button size="sm" variant="outline" className="h-8 text-xs text-red-500" onClick={handleDisconnectFH}>
+                  Disconnect
+                </Button>
+              ) : (
+                <Button size="sm" className="h-8 text-xs" onClick={handleConnectFH} disabled={fhValidating || !fhKey.trim()}>
+                  {fhValidating ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Connect'}
+                </Button>
+              )}
+            </div>
+            {fhError && (
+              <div className="flex items-center gap-1 text-xs text-red-500">
+                <XCircle className="h-3 w-3" />{fhError}
+              </div>
+            )}
+            {fhSuccess && (
+              <div className="flex items-center gap-1 text-xs text-emerald-500">
+                <CheckCircle2 className="h-3 w-3" />Finnhub connected successfully!
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground">
+              Free key: 60 calls/min.{' '}
+              <a href="https://finnhub.io/register" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 text-primary hover:underline">
+                Get a free key <ExternalLink className="h-2.5 w-2.5" />
+              </a>
+            </p>
+          </div>
+
+          {fhConnected && (
+            <div className="rounded-md bg-emerald-500/10 px-3 py-2">
+              <p className="text-xs text-emerald-500 font-medium">Finnhub features unlocked:</p>
+              <ul className="mt-1 space-y-0.5 text-xs text-muted-foreground">
+                <li>• Real-time stock quotes</li>
+                <li>• Company profiles & industry data</li>
+                <li>• Analyst recommendations (buy/hold/sell)</li>
+                <li>• Company-specific news feed</li>
+              </ul>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -239,6 +322,7 @@ export function Settings() {
               ['4', 'Charts'], ['5', 'Watchlist'], ['6', 'Orders'],
               ['7', 'Screener'], ['8', 'News'], ['9', 'AI Agent'],
               ['0', 'Settings'], ['/', 'Focus Search'], ['Esc', 'Close/Blur'],
+              ['Ctrl+K', 'Command Palette'],
             ].map(([key, desc]) => (
               <div key={key} className="flex items-center gap-2">
                 <kbd className="rounded border border-border bg-accent px-1.5 py-0.5 font-mono text-xs">{key}</kbd>

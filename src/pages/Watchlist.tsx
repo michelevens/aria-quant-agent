@@ -12,7 +12,8 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { usePortfolioContext } from '@/contexts/PortfolioContext'
-import { TrendingUp, TrendingDown, Plus, X, Loader2 } from 'lucide-react'
+import { Sparkline } from '@/components/trading/Sparkline'
+import { TrendingUp, TrendingDown, Plus, X, Loader2, ArrowUpDown } from 'lucide-react'
 
 function formatNum(v: number): string {
   if (v >= 1e12) return `$${(v / 1e12).toFixed(1)}T`
@@ -21,9 +22,13 @@ function formatNum(v: number): string {
   return `$${v.toLocaleString()}`
 }
 
+type SortKey = 'symbol' | 'price' | 'change' | 'changePercent' | 'volume' | 'marketCap'
+
 export function Watchlist() {
   const { watchlistQuotes, watchlistSymbols, addToWatchlist, removeFromWatchlist, loading } = usePortfolioContext()
   const [newSymbol, setNewSymbol] = useState('')
+  const [sortKey, setSortKey] = useState<SortKey>('symbol')
+  const [sortAsc, setSortAsc] = useState(true)
 
   const handleAdd = () => {
     const sym = newSymbol.trim().toUpperCase()
@@ -32,6 +37,24 @@ export function Watchlist() {
       setNewSymbol('')
     }
   }
+
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) setSortAsc(!sortAsc)
+    else { setSortKey(key); setSortAsc(true) }
+  }
+
+  const sorted = [...watchlistQuotes].sort((a, b) => {
+    const dir = sortAsc ? 1 : -1
+    if (sortKey === 'symbol') return a.symbol.localeCompare(b.symbol) * dir
+    return ((a[sortKey] ?? 0) - (b[sortKey] ?? 0)) * dir
+  })
+
+  const SortHeader = ({ label, field }: { label: string; field: SortKey }) => (
+    <button className="flex items-center gap-1 text-xs" onClick={() => handleSort(field)}>
+      {label}
+      {sortKey === field && <ArrowUpDown className="h-3 w-3" />}
+    </button>
+  )
 
   return (
     <div className="space-y-4">
@@ -50,8 +73,7 @@ export function Watchlist() {
             className="h-8 w-32 text-sm"
           />
           <Button size="sm" className="h-8 gap-1 text-xs" onClick={handleAdd}>
-            <Plus className="h-3.5 w-3.5" />
-            Add
+            <Plus className="h-3.5 w-3.5" /> Add
           </Button>
         </div>
       </div>
@@ -60,19 +82,20 @@ export function Watchlist() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-xs">Symbol</TableHead>
+                <TableHead><SortHeader label="Symbol" field="symbol" /></TableHead>
                 <TableHead className="text-xs">Name</TableHead>
-                <TableHead className="text-right text-xs">Price</TableHead>
-                <TableHead className="text-right text-xs">Change</TableHead>
-                <TableHead className="text-right text-xs">% Change</TableHead>
-                <TableHead className="text-right text-xs">Volume</TableHead>
-                <TableHead className="text-right text-xs">Mkt Cap</TableHead>
+                <TableHead className="text-xs">5D</TableHead>
+                <TableHead className="text-right"><SortHeader label="Price" field="price" /></TableHead>
+                <TableHead className="text-right"><SortHeader label="Change" field="change" /></TableHead>
+                <TableHead className="text-right"><SortHeader label="% Chg" field="changePercent" /></TableHead>
+                <TableHead className="text-right"><SortHeader label="Volume" field="volume" /></TableHead>
+                <TableHead className="text-right"><SortHeader label="Mkt Cap" field="marketCap" /></TableHead>
                 <TableHead className="text-right text-xs">P/E</TableHead>
                 <TableHead className="w-10"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {watchlistQuotes.map((item) => (
+              {sorted.map((item) => (
                 <TableRow key={item.symbol} className="hover:bg-accent/50">
                   <TableCell>
                     <div className="flex items-center gap-1.5">
@@ -84,27 +107,14 @@ export function Watchlist() {
                       )}
                     </div>
                   </TableCell>
-                  <TableCell className="max-w-40 truncate text-sm text-muted-foreground">
-                    {item.name}
+                  <TableCell className="max-w-40 truncate text-sm text-muted-foreground">{item.name}</TableCell>
+                  <TableCell><Sparkline symbol={item.symbol} /></TableCell>
+                  <TableCell className="text-right text-sm font-medium">${item.price.toFixed(2)}</TableCell>
+                  <TableCell className={`text-right text-sm ${item.change >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                    {item.change >= 0 ? '+' : ''}{item.change.toFixed(2)}
                   </TableCell>
-                  <TableCell className="text-right text-sm font-medium">
-                    ${item.price.toFixed(2)}
-                  </TableCell>
-                  <TableCell
-                    className={`text-right text-sm ${
-                      item.change >= 0 ? 'text-emerald-500' : 'text-red-500'
-                    }`}
-                  >
-                    {item.change >= 0 ? '+' : ''}
-                    {item.change.toFixed(2)}
-                  </TableCell>
-                  <TableCell
-                    className={`text-right text-sm font-medium ${
-                      item.changePercent >= 0 ? 'text-emerald-500' : 'text-red-500'
-                    }`}
-                  >
-                    {item.changePercent >= 0 ? '+' : ''}
-                    {item.changePercent.toFixed(2)}%
+                  <TableCell className={`text-right text-sm font-medium ${item.changePercent >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                    {item.changePercent >= 0 ? '+' : ''}{item.changePercent.toFixed(2)}%
                   </TableCell>
                   <TableCell className="text-right text-sm text-muted-foreground">
                     {item.volume >= 1e6 ? `${(item.volume / 1e6).toFixed(1)}M` : item.volume.toLocaleString()}
@@ -116,12 +126,7 @@ export function Watchlist() {
                     {item.pe > 0 ? item.pe.toFixed(1) : '—'}
                   </TableCell>
                   <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6"
-                      onClick={() => removeFromWatchlist(item.symbol)}
-                    >
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeFromWatchlist(item.symbol)}>
                       <X className="h-3 w-3" />
                     </Button>
                   </TableCell>
@@ -129,7 +134,7 @@ export function Watchlist() {
               ))}
               {watchlistQuotes.length === 0 && !loading && (
                 <TableRow>
-                  <TableCell colSpan={9} className="py-8 text-center text-sm text-muted-foreground">
+                  <TableCell colSpan={10} className="py-8 text-center text-sm text-muted-foreground">
                     Add symbols to your watchlist to track them
                   </TableCell>
                 </TableRow>
