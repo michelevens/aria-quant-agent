@@ -14,15 +14,6 @@ import {
   FlaskConical,
   Bell,
   Shield,
-  LayoutGrid,
-  BookOpen,
-  BarChart3,
-  Calendar,
-  Puzzle,
-  Users,
-  Coins,
-  Zap,
-  GraduationCap,
 } from 'lucide-react'
 
 const navItems = [
@@ -38,15 +29,6 @@ const navItems = [
   { to: '/backtest', icon: FlaskConical, label: 'Backtest' },
   { to: '/alerts', icon: Bell, label: 'Alerts' },
   { to: '/risk', icon: Shield, label: 'Risk' },
-  { to: '/heatmap', icon: LayoutGrid, label: 'Heat Map' },
-  { to: '/journal', icon: BookOpen, label: 'Journal' },
-  { to: '/analytics', icon: BarChart3, label: 'Analytics' },
-  { to: '/calendar', icon: Calendar, label: 'Calendar' },
-  { to: '/strategy', icon: Puzzle, label: 'Strategy' },
-  { to: '/social', icon: Users, label: 'Social Trading' },
-  { to: '/crypto', icon: Coins, label: 'Crypto' },
-  { to: '/options-flow', icon: Zap, label: 'Options Flow' },
-  { to: '/learn', icon: GraduationCap, label: 'Learn' },
 ]
 
 const bottomItems = [

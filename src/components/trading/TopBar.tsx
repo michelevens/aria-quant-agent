@@ -11,9 +11,13 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { useAuth } from '@/contexts/AuthContext'
 import { useTheme } from '@/contexts/ThemeContext'
-import { Search, Wifi, Sun, Moon, Monitor, LogOut, TrendingUp, Loader2 } from 'lucide-react'
+import {
+  Search, Wifi, Sun, Moon, Monitor, LogOut, TrendingUp, Loader2,
+  Users, Coins, Zap, GraduationCap, LayoutGrid, BookOpen, BarChart3,
+  Calendar, Puzzle, MoreHorizontal,
+} from 'lucide-react'
 import { NotificationCenter } from './NotificationCenter'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 
 interface SearchResult {
   symbol: string
@@ -39,6 +43,21 @@ async function searchSymbols(query: string): Promise<SearchResult[]> {
       type: (q.quoteType ?? '') as string,
       exchange: (q.exchDisp ?? q.exchange ?? '') as string,
     }))
+}
+
+function NavIcon({ to, icon: Icon, label }: { to: string; icon: typeof Users; label: string }) {
+  const location = useLocation()
+  const navigate = useNavigate()
+  const active = location.pathname === to
+  return (
+    <button
+      onClick={() => navigate(to)}
+      title={label}
+      className={`flex h-8 w-8 items-center justify-center rounded-md transition-colors ${active ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'}`}
+    >
+      <Icon className="h-4 w-4" />
+    </button>
+  )
 }
 
 export function TopBar() {
@@ -183,7 +202,56 @@ export function TopBar() {
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-1.5">
+        {/* Quick-access nav icons */}
+        <div className="hidden items-center gap-0.5 md:flex">
+          <NavIcon to="/crypto" icon={Coins} label="Crypto" />
+          <NavIcon to="/options-flow" icon={Zap} label="Options Flow" />
+          <NavIcon to="/social" icon={Users} label="Social Trading" />
+          <NavIcon to="/learn" icon={GraduationCap} label="Learn" />
+        </div>
+
+        {/* More dropdown for remaining pages */}
+        <DropdownMenu>
+          <DropdownMenuTrigger className="flex h-8 w-8 items-center justify-center rounded-md hover:bg-accent">
+            <MoreHorizontal className="h-4 w-4" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem onClick={() => navigate('/heatmap')}>
+              <LayoutGrid className="mr-2 h-3.5 w-3.5" /> Heat Map
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/journal')}>
+              <BookOpen className="mr-2 h-3.5 w-3.5" /> Journal
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/analytics')}>
+              <BarChart3 className="mr-2 h-3.5 w-3.5" /> Analytics
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/calendar')}>
+              <Calendar className="mr-2 h-3.5 w-3.5" /> Calendar
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/strategy')}>
+              <Puzzle className="mr-2 h-3.5 w-3.5" /> Strategy Builder
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <div className="flex md:hidden flex-col">
+              <DropdownMenuItem onClick={() => navigate('/crypto')}>
+                <Coins className="mr-2 h-3.5 w-3.5" /> Crypto
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate('/options-flow')}>
+                <Zap className="mr-2 h-3.5 w-3.5" /> Options Flow
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate('/social')}>
+                <Users className="mr-2 h-3.5 w-3.5" /> Social Trading
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate('/learn')}>
+                <GraduationCap className="mr-2 h-3.5 w-3.5" /> Learn
+              </DropdownMenuItem>
+            </div>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <div className="mx-1 h-5 w-px bg-border" />
+
         <div className="hidden items-center gap-1.5 text-xs sm:flex">
           <Wifi className="h-3.5 w-3.5 text-emerald-500" />
           <span className="text-muted-foreground">Market Open</span>
