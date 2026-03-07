@@ -1,20 +1,29 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
 import { useAuth } from '@/contexts/AuthContext'
-import { Bot, Loader2, TrendingUp, Shield, Brain, Zap, LineChart, BarChart3, Briefcase, Bell } from 'lucide-react'
+import {
+  Bot, Loader2, TrendingUp, Shield, Brain, Zap, LineChart, BarChart3,
+  Briefcase, Bell, LogIn, Eye, EyeOff, CheckCircle2, Smartphone, Globe,
+} from 'lucide-react'
+
+const features = [
+  { icon: TrendingUp, title: 'Real-time Portfolio', desc: 'Live Yahoo Finance data with 30s auto-refresh' },
+  { icon: Brain, title: '7-Factor Quant Engine', desc: 'RSI, MACD, Bollinger, MA, Stochastic, Volume, Trend' },
+  { icon: Shield, title: 'Risk Analytics', desc: 'Sharpe, Sortino, VaR, Beta, Alpha, Max Drawdown' },
+  { icon: Zap, title: 'AI Trading Agent', desc: 'Multi-strategy analysis with portfolio insights' },
+  { icon: LineChart, title: 'Advanced Charts', desc: 'Candlesticks, drawing tools, Fibonacci, overlays' },
+  { icon: Briefcase, title: 'Paper Trading', desc: 'Bracket, OCO, trailing stop with full order book' },
+]
 
 export function Login() {
-  const { login, register } = useAuth()
+  const { login, register: authRegister } = useAuth()
   const navigate = useNavigate()
   const [mode, setMode] = useState<'login' | 'register'>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -25,7 +34,7 @@ export function Login() {
 
     const success = mode === 'login'
       ? await login(email, password)
-      : await register(name, email, password)
+      : await authRegister(name, email, password)
 
     setLoading(false)
     if (success) {
@@ -43,118 +52,263 @@ export function Login() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <div className="grid w-full max-w-5xl gap-8 lg:grid-cols-2">
-        {/* Left: Branding */}
-        <div className="flex flex-col justify-center space-y-6">
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary">
-              <Bot className="h-6 w-6 text-primary-foreground" />
+    <div
+      className="flex min-h-screen"
+      style={{
+        background: 'radial-gradient(ellipse 80% 50% at 50% -20%, rgba(212,160,23,0.12), transparent), #030712',
+      }}
+    >
+      {/* Left: Branded Hero Panel */}
+      <div className="hidden items-center justify-center overflow-hidden p-12 lg:flex lg:w-1/2" style={{ position: 'relative' }}>
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'radial-gradient(ellipse 60% 60% at 30% 50%, rgba(212,160,23,0.15), transparent)',
+          }}
+        />
+
+        <div style={{ position: 'relative', zIndex: 10, maxWidth: '32rem' }}>
+          {/* Logo */}
+          <div className="mb-8 flex items-center gap-3">
+            <div
+              className="flex h-12 w-12 items-center justify-center rounded-xl text-white"
+              style={{ background: 'linear-gradient(135deg, #d4a017, #b8860b)' }}
+            >
+              <Bot className="h-6 w-6" />
             </div>
             <div>
+              <span className="text-2xl font-bold text-white">Aria Quant</span>
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold tracking-tight">Aria Quant</h1>
-                <div className="mx-1 h-6 w-px bg-border" />
-                <div>
-                  <p className="font-bold tracking-tight" style={{ color: '#d4a017', fontSize: '11px' }}>Acsyom</p>
-                  <p style={{ color: '#c49a15', fontSize: '9px' }}>Analytics</p>
-                </div>
+                <span className="font-bold" style={{ color: '#d4a017', fontSize: '11px' }}>Acsyom</span>
+                <span style={{ color: '#c49a15', fontSize: '9px' }}>Analytics</span>
               </div>
-              <p className="text-sm text-muted-foreground">AI-Powered Trading Agent</p>
             </div>
           </div>
 
-          <p className="text-muted-foreground">
-            Institutional-grade quantitative analysis, real-time market intelligence,
-            and AI-driven trading signals — all in one platform.
+          {/* Headline */}
+          <h1 className="mb-3 text-4xl font-bold tracking-tight text-white">
+            Quantitative Trading,{' '}
+            <span
+              style={{
+                background: 'linear-gradient(to right, #f0c040, #d4a017)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }}
+            >
+              Democratized
+            </span>
+          </h1>
+          <p className="mb-10 text-lg" style={{ color: '#94a3b8' }}>
+            Institutional-grade analysis, real-time market intelligence, and AI-driven trading signals — all in one platform built for modern traders.
           </p>
 
-          <div className="space-y-3">
-            <Feature icon={<TrendingUp className="h-4 w-4 text-emerald-500" />} text="Real-time portfolio tracking with live Yahoo Finance data" />
-            <Feature icon={<Brain className="h-4 w-4 text-blue-500" />} text="7-factor quant engine: RSI, MACD, Bollinger, MA, Stochastic, Volume, Trend" />
-            <Feature icon={<Shield className="h-4 w-4 text-yellow-500" />} text="Risk analytics: Sharpe, Sortino, VaR, Beta, Alpha, Correlation" />
-            <Feature icon={<Zap className="h-4 w-4 text-purple-500" />} text="Paper trading, backtesting, and AI-generated signals" />
-            <Feature icon={<LineChart className="h-4 w-4 text-cyan-500" />} text="Candlestick charts with drawing tools, Fibonacci, and overlays" />
-            <Feature icon={<BarChart3 className="h-4 w-4 text-orange-500" />} text="Performance analytics, sector heat maps, and trade journal" />
-            <Feature icon={<Briefcase className="h-4 w-4 text-rose-500" />} text="Options chain with Greeks, advanced orders (bracket, OCO, trailing)" />
-            <Feature icon={<Bell className="h-4 w-4 text-green-500" />} text="Price alerts, stock screener, and command palette (Ctrl+K)" />
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            {['Yahoo Finance', 'Alpha Vantage', 'Finnhub', 'Real-time', '16+ Pages', 'Dark/Light Mode'].map((tag) => (
-              <Badge key={tag} variant="outline" className="text-xs">{tag}</Badge>
+          {/* Feature highlights */}
+          <div className="space-y-5">
+            {features.map((f) => (
+              <div key={f.title} className="flex items-start gap-4">
+                <div
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
+                  style={{
+                    backgroundColor: 'rgba(212,160,23,0.12)',
+                    border: '1px solid rgba(212,160,23,0.2)',
+                  }}
+                >
+                  <f.icon className="h-5 w-5" style={{ color: '#f0c040' }} />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-white">{f.title}</p>
+                  <p className="text-sm" style={{ color: '#6b7280' }}>{f.desc}</p>
+                </div>
+              </div>
             ))}
           </div>
-        </div>
 
-        {/* Right: Auth Form */}
-        <Card>
-          <CardHeader className="pb-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold">
-                {mode === 'login' ? 'Welcome Back' : 'Create Account'}
-              </h2>
-              <Badge variant="outline" className="text-xs">Beta</Badge>
+          {/* Trust badges */}
+          <div className="mt-12 flex items-center gap-6 pt-8" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+            <TrustBadge icon={<Globe className="h-4 w-4" />} text="Yahoo Finance" />
+            <TrustBadge icon={<BarChart3 className="h-4 w-4" />} text="Alpha Vantage" />
+            <TrustBadge icon={<Smartphone className="h-4 w-4" />} text="Responsive" />
+            <TrustBadge icon={<CheckCircle2 className="h-4 w-4" style={{ color: '#4ade80' }} />} text="16+ Pages" />
+          </div>
+        </div>
+      </div>
+
+      {/* Right: Login Form */}
+      <div className="flex flex-1 items-center justify-center p-6 lg:p-12">
+        <div className="w-full max-w-md">
+          {/* Mobile logo */}
+          <div className="mb-8 flex items-center justify-center gap-2.5 lg:hidden">
+            <div
+              className="flex h-10 w-10 items-center justify-center rounded-xl text-white"
+              style={{ background: 'linear-gradient(135deg, #d4a017, #b8860b)' }}
+            >
+              <Bot className="h-5 w-5" />
             </div>
-            <p className="text-xs text-muted-foreground">
-              {mode === 'login' ? 'Sign in to your trading dashboard' : 'Start your quant trading journey'}
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <form onSubmit={handleSubmit} className="space-y-3">
-              {mode === 'register' && (
-                <div>
-                  <label className="mb-1 block text-xs text-muted-foreground">Full Name</label>
-                  <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="John Doe" className="h-9" required />
+            <span className="text-xl font-bold text-white">Aria Quant</span>
+          </div>
+
+          {/* Form card */}
+          <div
+            className="rounded-2xl p-8"
+            style={{
+              backgroundColor: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.08)',
+            }}
+          >
+            <div className="mb-6 text-center">
+              <h2 className="text-2xl font-bold text-white">
+                {mode === 'login' ? 'Welcome back' : 'Create Account'}
+              </h2>
+              <p className="mt-1 text-sm" style={{ color: '#6b7280' }}>
+                {mode === 'login' ? 'Sign in to your trading dashboard' : 'Start your quant trading journey'}
+              </p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {error && (
+                <div
+                  className="rounded-lg p-3 text-sm"
+                  style={{ backgroundColor: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)' }}
+                >
+                  {error}
                 </div>
               )}
-              <div>
-                <label className="mb-1 block text-xs text-muted-foreground">Email</label>
-                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="trader@example.com" className="h-9" required />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs text-muted-foreground">Password</label>
-                <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter password" className="h-9" required />
+
+              {mode === 'register' && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium" style={{ color: '#94a3b8' }}>Full Name</label>
+                  <Input
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="John Doe"
+                    className="border-0 text-white"
+                    style={{ backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: '0.75rem' }}
+                    required
+                  />
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium" style={{ color: '#94a3b8' }}>Email</label>
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="trader@example.com"
+                  className="border-0 text-white"
+                  style={{ backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: '0.75rem' }}
+                  required
+                />
               </div>
 
-              {error && <p className="text-xs text-red-500">{error}</p>}
+              <div className="space-y-2">
+                <label className="text-sm font-medium" style={{ color: '#94a3b8' }}>Password</label>
+                <div style={{ position: 'relative' }}>
+                  <Input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter password"
+                    className="border-0 pr-10 text-white"
+                    style={{ backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: '0.75rem' }}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-0 top-0 flex h-full items-center px-3"
+                    style={{ color: '#6b7280' }}
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
 
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold text-white transition-all disabled:opacity-50"
+                style={{
+                  background: 'linear-gradient(135deg, #d4a017, #b8860b)',
+                  boxShadow: '0 0 30px rgba(212,160,23,0.3)',
+                }}
+              >
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}
                 {mode === 'login' ? 'Sign In' : 'Create Account'}
-              </Button>
+              </button>
             </form>
 
-            <div className="relative">
-              <Separator />
-              <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">or</span>
+            <div className="mt-6 space-y-3 text-center">
+              <p className="text-sm" style={{ color: '#6b7280' }}>
+                {mode === 'login' ? (
+                  <>
+                    Don&apos;t have an account?{' '}
+                    <button className="font-medium" style={{ color: '#f0c040' }} onClick={() => setMode('register')}>
+                      Sign up
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    Already have an account?{' '}
+                    <button className="font-medium" style={{ color: '#f0c040' }} onClick={() => setMode('login')}>
+                      Sign in
+                    </button>
+                  </>
+                )}
+              </p>
             </div>
+          </div>
 
-            <Button variant="outline" className="w-full gap-2 text-sm" onClick={handleDemo} disabled={loading}>
-              <Bot className="h-4 w-4" /> Try Demo Account
-            </Button>
-
-            <p className="text-center text-xs text-muted-foreground">
-              {mode === 'login' ? (
-                <>No account?{' '}<button className="text-primary underline" onClick={() => setMode('register')}>Sign up</button></>
-              ) : (
-                <>Already have an account?{' '}<button className="text-primary underline" onClick={() => setMode('login')}>Sign in</button></>
-              )}
-            </p>
-
-            <p className="text-center text-xs text-muted-foreground">Demo: demo@ariaquant.com / demo123</p>
-          </CardContent>
-        </Card>
+          {/* Demo Account Card */}
+          <div
+            className="mt-6 rounded-2xl p-6"
+            style={{
+              backgroundColor: 'rgba(255,255,255,0.03)',
+              border: '1px solid rgba(255,255,255,0.06)',
+            }}
+          >
+            <div className="mb-4">
+              <h3 className="text-sm font-semibold text-white">Demo Account</h3>
+              <p className="mt-0.5 text-xs" style={{ color: '#6b7280' }}>
+                Click to explore the full platform instantly
+              </p>
+            </div>
+            <button
+              className="flex w-full items-center gap-3 rounded-xl p-3 text-left transition-all"
+              style={{
+                backgroundColor: 'rgba(212,160,23,0.06)',
+                border: '1px solid rgba(212,160,23,0.15)',
+              }}
+              onClick={handleDemo}
+              disabled={loading}
+            >
+              <span
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
+                style={{ backgroundColor: 'rgba(212,160,23,0.15)', color: '#f0c040' }}
+              >
+                <Bot className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="text-sm font-medium text-white">Demo Trader</p>
+                <p className="text-xs" style={{ color: '#6b7280' }}>
+                  demo@ariaquant.com — Full access to all 16 pages
+                </p>
+              </div>
+              <Bell className="ml-auto h-4 w-4" style={{ color: '#d4a017' }} />
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   )
 }
 
-function Feature({ icon, text }: { icon: React.ReactNode; text: string }) {
+function TrustBadge({ icon, text }: { icon: React.ReactNode; text: string }) {
   return (
-    <div className="flex items-start gap-3">
-      <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-accent">{icon}</div>
-      <span className="text-sm text-muted-foreground">{text}</span>
+    <div className="flex items-center gap-2" style={{ color: '#6b7280' }}>
+      {icon}
+      <span className="text-xs font-medium">{text}</span>
     </div>
   )
 }
