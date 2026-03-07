@@ -6,9 +6,11 @@ import { TickerBar } from '@/components/trading/TickerBar'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
 import { Menu, X } from 'lucide-react'
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 
 export function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  useKeyboardShortcuts()
 
   return (
     <div className="flex h-screen overflow-hidden">

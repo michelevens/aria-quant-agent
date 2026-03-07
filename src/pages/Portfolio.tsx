@@ -1,5 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { PortfolioSummary } from '@/components/trading/PortfolioSummary'
+import { exportToCSV } from '@/lib/csv'
+import { Download } from 'lucide-react'
 import { PositionsTable } from '@/components/trading/PositionsTable'
 import { RiskMetrics } from '@/components/trading/RiskMetrics'
 import { CorrelationHeatmap } from '@/components/trading/CorrelationHeatmap'
@@ -34,9 +37,33 @@ export function Portfolio() {
     value: h.marketValue,
   }))
 
+  const handleExportPortfolio = () => {
+    exportToCSV(
+      holdings.map((h) => ({
+        Symbol: h.symbol,
+        Name: h.name,
+        Quantity: h.quantity,
+        AvgCost: h.avgCost.toFixed(2),
+        CurrentPrice: h.currentPrice.toFixed(2),
+        MarketValue: h.marketValue.toFixed(2),
+        TotalGain: h.totalGain.toFixed(2),
+        TotalGainPct: h.totalGainPercent.toFixed(2),
+        Weight: h.weight.toFixed(2),
+        DayChange: h.changePercent.toFixed(2),
+      })),
+      `aria-portfolio-${new Date().toISOString().slice(0, 10)}`
+    )
+  }
+
   return (
     <div className="space-y-4">
-      <PortfolioSummary />
+      <div className="flex items-center justify-between">
+        <PortfolioSummary />
+        <Button variant="outline" size="sm" className="gap-1 text-xs" onClick={handleExportPortfolio}>
+          <Download className="h-3.5 w-3.5" />
+          Export CSV
+        </Button>
+      </div>
       <EquityCurve />
 
       <div className="grid gap-4 lg:grid-cols-3">

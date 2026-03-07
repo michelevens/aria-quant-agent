@@ -13,6 +13,9 @@ import {
   Search,
   FlaskConical,
   Bell,
+  Shield,
+  LayoutGrid,
+  BookOpen,
 } from 'lucide-react'
 
 const navItems = [
@@ -27,6 +30,9 @@ const navItems = [
   { to: '/agent', icon: Bot, label: 'AI Agent' },
   { to: '/backtest', icon: FlaskConical, label: 'Backtest' },
   { to: '/alerts', icon: Bell, label: 'Alerts' },
+  { to: '/risk', icon: Shield, label: 'Risk' },
+  { to: '/heatmap', icon: LayoutGrid, label: 'Heat Map' },
+  { to: '/journal', icon: BookOpen, label: 'Journal' },
 ]
 
 const bottomItems = [

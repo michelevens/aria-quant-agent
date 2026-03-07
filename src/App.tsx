@@ -22,6 +22,9 @@ const Agent = lazy(() => import('@/pages/Agent').then((m) => ({ default: m.Agent
 const Settings = lazy(() => import('@/pages/Settings').then((m) => ({ default: m.Settings })))
 const Backtest = lazy(() => import('@/pages/Backtest').then((m) => ({ default: m.Backtest })))
 const Alerts = lazy(() => import('@/pages/Alerts').then((m) => ({ default: m.Alerts })))
+const RiskDashboard = lazy(() => import('@/pages/RiskDashboard').then((m) => ({ default: m.RiskDashboard })))
+const HeatMap = lazy(() => import('@/pages/HeatMap').then((m) => ({ default: m.HeatMap })))
+const Journal = lazy(() => import('@/pages/Journal').then((m) => ({ default: m.Journal })))
 
 function PageLoader() {
   return (
@@ -55,6 +58,9 @@ function ProtectedRoutes() {
             <Route path="agent" element={<Agent />} />
             <Route path="backtest" element={<Backtest />} />
             <Route path="alerts" element={<Alerts />} />
+            <Route path="risk" element={<RiskDashboard />} />
+            <Route path="heatmap" element={<HeatMap />} />
+            <Route path="journal" element={<Journal />} />
             <Route path="settings" element={<Settings />} />
           </Route>
         </Routes>

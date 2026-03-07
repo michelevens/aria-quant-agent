@@ -19,7 +19,9 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useTechnicalAnalysis } from '@/hooks/useMarketData'
 import { sma, bollingerBands } from '@/lib/analytics/technicals'
-import { TrendingUp, TrendingDown, Loader2, CandlestickChart, LineChart } from 'lucide-react'
+import { TrendingUp, TrendingDown, Loader2, CandlestickChart, LineChart, Minus, GitBranch, Trash2 } from 'lucide-react'
+import { useChartDrawings } from '@/hooks/useChartDrawings'
+import { Input } from '@/components/ui/input'
 import type { TimeRange } from '@/types/market'
 
 const timeframes: TimeRange[] = ['1D', '5D', '1M', '3M', '1Y', '5Y']
@@ -92,6 +94,9 @@ export function PriceChart({ symbol = 'NVDA' }: { symbol?: string }) {
   const [showSMA, setShowSMA] = useState(true)
   const [showBB, setShowBB] = useState(false)
   const [chartMode, setChartMode] = useState<ChartMode>('candle')
+  const [hlineInput, setHlineInput] = useState('')
+  const [showDrawingTools, setShowDrawingTools] = useState(false)
+  const { drawings, addHLine, addFibonacci, clearDrawings } = useChartDrawings()
 
   const { data: bars, indicators, signal, loading, error } = useTechnicalAnalysis(symbol, timeframe)
 
@@ -237,7 +242,77 @@ export function PriceChart({ symbol = 'NVDA' }: { symbol?: string }) {
             >
               BB
             </Button>
+            <Button
+              variant={showDrawingTools ? 'secondary' : 'ghost'}
+              size="sm"
+              className="h-6 px-2 text-xs"
+              onClick={() => setShowDrawingTools(!showDrawingTools)}
+              title="Drawing Tools"
+            >
+              <GitBranch className="h-3 w-3" />
+            </Button>
           </div>
+          {showDrawingTools && (
+            <div className="flex items-center gap-1">
+              <Input
+                value={hlineInput}
+                onChange={(e) => setHlineInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    const price = parseFloat(hlineInput)
+                    if (!isNaN(price) && price > 0) {
+                      addHLine(price)
+                      setHlineInput('')
+                    }
+                  }
+                }}
+                placeholder="H-Line price..."
+                className="h-6 w-24 text-xs"
+              />
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 px-2 text-xs"
+                onClick={() => {
+                  const price = parseFloat(hlineInput)
+                  if (!isNaN(price) && price > 0) {
+                    addHLine(price)
+                    setHlineInput('')
+                  }
+                }}
+                title="Add horizontal line"
+              >
+                <Minus className="h-3 w-3" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 px-2 text-xs"
+                onClick={() => {
+                  if (chartData.length > 20) {
+                    const recent = chartData.slice(-60)
+                    const high = Math.max(...recent.map((d) => d.high))
+                    const low = Math.min(...recent.map((d) => d.low))
+                    addFibonacci(high, low)
+                  }
+                }}
+                title="Auto Fibonacci (last 60 bars)"
+              >
+                Fib
+              </Button>
+              {drawings.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2 text-xs text-red-500"
+                  onClick={clearDrawings}
+                  title="Clear all drawings"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       </CardHeader>
       <CardContent className="flex flex-1 flex-col gap-1 pb-3">
@@ -317,6 +392,35 @@ export function PriceChart({ symbol = 'NVDA' }: { symbol?: string }) {
                   <ReferenceLine y={indicators.resistance} stroke="#ef4444" strokeDasharray="8 4" strokeOpacity={0.5} />
                 </>
               )}
+              {drawings.map((d) => {
+                if (d.type === 'hline') {
+                  return (
+                    <ReferenceLine
+                      key={d.id}
+                      y={d.price}
+                      stroke={d.color}
+                      strokeDasharray="6 3"
+                      strokeWidth={1.5}
+                      label={{ value: d.label, fontSize: 10, fill: d.color, position: 'right' }}
+                    />
+                  )
+                }
+                if (d.type === 'fibonacci') {
+                  const fibColors = ['#ef4444', '#f59e0b', '#eab308', '#22c55e', '#3b82f6', '#8b5cf6', '#ef4444']
+                  return d.levels.map((level, i) => (
+                    <ReferenceLine
+                      key={`${d.id}-${level.ratio}`}
+                      y={level.price}
+                      stroke={fibColors[i % fibColors.length]}
+                      strokeDasharray="4 2"
+                      strokeWidth={1}
+                      strokeOpacity={0.7}
+                      label={{ value: level.label, fontSize: 9, fill: fibColors[i % fibColors.length], position: 'left' }}
+                    />
+                  ))
+                }
+                return null
+              })}
             </ComposedChart>
           </ResponsiveContainer>
         </div>

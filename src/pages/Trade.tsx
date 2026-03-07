@@ -4,6 +4,7 @@ import { TechnicalPanel } from '@/components/trading/TechnicalPanel'
 import { OrderPanel } from '@/components/trading/OrderPanel'
 import { WatchlistPanel } from '@/components/trading/WatchlistPanel'
 import { OrdersTable } from '@/components/trading/OrdersTable'
+import { OptionsChain } from '@/components/trading/OptionsChain'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -58,6 +59,7 @@ export function Trade() {
               <OrdersTable />
             </CardContent>
           </Card>
+          <OptionsChain symbol={symbol} spotPrice={holdings.find((h) => h.symbol === symbol)?.currentPrice ?? 150} />
         </div>
         <div className="flex flex-col gap-4">
           <OrderPanel />

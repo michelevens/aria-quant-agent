@@ -23,6 +23,9 @@ export function OrderPanel({ defaultSymbol = 'NVDA' }: { defaultSymbol?: string 
   const [orderType, setOrderType] = useState<OrderType>('MARKET')
   const [tif, setTif] = useState<TimeInForce>('DAY')
   const [lastOrder, setLastOrder] = useState<string | null>(null)
+  const [trailAmount, setTrailAmount] = useState('')
+  const [bracketTP, setBracketTP] = useState('')
+  const [bracketSL, setBracketSL] = useState('')
 
   const { placeOrder } = useTradingContext()
   const { holdings, totals } = usePortfolioContext()
@@ -43,7 +46,10 @@ export function OrderPanel({ defaultSymbol = 'NVDA' }: { defaultSymbol?: string 
       side,
       type: orderType,
       quantity: qty,
-      limitPrice: orderType !== 'MARKET' ? parseFloat(limitPrice) : undefined,
+      limitPrice: orderType !== 'MARKET' && orderType !== 'TRAILING_STOP' && orderType !== 'BRACKET' ? parseFloat(limitPrice) : undefined,
+      trailAmount: orderType === 'TRAILING_STOP' ? parseFloat(trailAmount) : undefined,
+      bracketTakeProfit: orderType === 'BRACKET' ? parseFloat(bracketTP) : undefined,
+      bracketStopLoss: orderType === 'BRACKET' ? parseFloat(bracketSL) : undefined,
       tif,
       currentPrice,
     })
@@ -100,6 +106,9 @@ export function OrderPanel({ defaultSymbol = 'NVDA' }: { defaultSymbol?: string 
                     <SelectItem value="LIMIT">Limit</SelectItem>
                     <SelectItem value="STOP">Stop</SelectItem>
                     <SelectItem value="STOP_LIMIT">Stop Limit</SelectItem>
+                    <SelectItem value="TRAILING_STOP">Trailing Stop</SelectItem>
+                    <SelectItem value="BRACKET">Bracket</SelectItem>
+                    <SelectItem value="OCO">OCO</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -114,7 +123,7 @@ export function OrderPanel({ defaultSymbol = 'NVDA' }: { defaultSymbol?: string 
                     min="1"
                   />
                 </div>
-                {orderType !== 'MARKET' && (
+                {(orderType === 'LIMIT' || orderType === 'STOP' || orderType === 'STOP_LIMIT' || orderType === 'OCO') && (
                   <div>
                     <label className="mb-1 block text-xs text-muted-foreground">
                       {orderType === 'STOP' ? 'Stop Price' : 'Limit Price'}
@@ -130,6 +139,45 @@ export function OrderPanel({ defaultSymbol = 'NVDA' }: { defaultSymbol?: string 
                   </div>
                 )}
               </div>
+              {orderType === 'TRAILING_STOP' && (
+                <div>
+                  <label className="mb-1 block text-xs text-muted-foreground">Trail Amount ($)</label>
+                  <Input
+                    value={trailAmount}
+                    onChange={(e) => setTrailAmount(e.target.value)}
+                    className="h-8 text-sm"
+                    type="number"
+                    step="0.50"
+                    placeholder="2.00"
+                  />
+                </div>
+              )}
+              {orderType === 'BRACKET' && (
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="mb-1 block text-xs text-muted-foreground">Take Profit</label>
+                    <Input
+                      value={bracketTP}
+                      onChange={(e) => setBracketTP(e.target.value)}
+                      className="h-8 text-sm"
+                      type="number"
+                      step="0.01"
+                      placeholder={currentPrice > 0 ? (currentPrice * 1.05).toFixed(2) : '0.00'}
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs text-muted-foreground">Stop Loss</label>
+                    <Input
+                      value={bracketSL}
+                      onChange={(e) => setBracketSL(e.target.value)}
+                      className="h-8 text-sm"
+                      type="number"
+                      step="0.01"
+                      placeholder={currentPrice > 0 ? (currentPrice * 0.95).toFixed(2) : '0.00'}
+                    />
+                  </div>
+                </div>
+              )}
               <div>
                 <label className="mb-1 block text-xs text-muted-foreground">Time in Force</label>
                 <Select value={tif} onValueChange={(v: string | null) => { if (v) setTif(v as TimeInForce) }}>

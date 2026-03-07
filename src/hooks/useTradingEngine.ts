@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 
 export type OrderSide = 'BUY' | 'SELL'
-export type OrderType = 'MARKET' | 'LIMIT' | 'STOP' | 'STOP_LIMIT'
+export type OrderType = 'MARKET' | 'LIMIT' | 'STOP' | 'STOP_LIMIT' | 'TRAILING_STOP' | 'OCO' | 'BRACKET'
 export type OrderStatus = 'OPEN' | 'FILLED' | 'PARTIAL' | 'CANCELLED'
 export type TimeInForce = 'DAY' | 'GTC' | 'IOC' | 'FOK'
 
@@ -13,6 +13,12 @@ export interface Order {
   quantity: number
   limitPrice?: number
   stopPrice?: number
+  trailAmount?: number
+  trailPercent?: number
+  bracketTakeProfit?: number
+  bracketStopLoss?: number
+  linkedOrderId?: string
+  parentOrderId?: string
   tif: TimeInForce
   status: OrderStatus
   filledQty: number
@@ -64,10 +70,14 @@ export function useTradingEngine() {
     quantity: number
     limitPrice?: number
     stopPrice?: number
+    trailAmount?: number
+    trailPercent?: number
+    bracketTakeProfit?: number
+    bracketStopLoss?: number
     tif: TimeInForce
     currentPrice: number
   }): Order => {
-    const { symbol, side, type, quantity, limitPrice, stopPrice, tif, currentPrice } = params
+    const { symbol, side, type, quantity, limitPrice, stopPrice, tif, currentPrice, trailAmount, trailPercent, bracketTakeProfit, bracketStopLoss } = params
 
     const order: Order = {
       id: `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`,
@@ -139,6 +149,76 @@ export function useTradingEngine() {
           orders: [order, ...prev.orders],
         }))
       }
+    } else if (type === 'BRACKET') {
+      // Bracket: fill entry at market, create TP and SL child orders
+      order.status = 'FILLED'
+      order.filledQty = quantity
+      order.filledPrice = currentPrice
+      order.filledAt = Date.now()
+      order.bracketTakeProfit = bracketTakeProfit
+      order.bracketStopLoss = bracketStopLoss
+
+      const trade: TradeRecord = {
+        id: `TRD-${Date.now()}`,
+        orderId: order.id,
+        symbol, side, quantity,
+        price: currentPrice,
+        total: currentPrice * quantity,
+        timestamp: Date.now(),
+      }
+
+      const exitSide: OrderSide = side === 'BUY' ? 'SELL' : 'BUY'
+      const tpOrder: Order = {
+        id: `ORD-${Date.now()}-TP`,
+        symbol, side: exitSide, type: 'LIMIT',
+        quantity, limitPrice: bracketTakeProfit, tif: 'GTC',
+        status: 'OPEN', filledQty: 0, filledPrice: 0,
+        createdAt: Date.now(), parentOrderId: order.id,
+        linkedOrderId: `ORD-${Date.now()}-SL`,
+      }
+      const slOrder: Order = {
+        id: `ORD-${Date.now()}-SL`,
+        symbol, side: exitSide, type: 'STOP',
+        quantity, stopPrice: bracketStopLoss, tif: 'GTC',
+        status: 'OPEN', filledQty: 0, filledPrice: 0,
+        createdAt: Date.now(), parentOrderId: order.id,
+        linkedOrderId: tpOrder.id,
+      }
+
+      setState((prev) => ({
+        orders: [slOrder, tpOrder, order, ...prev.orders],
+        trades: [trade, ...prev.trades],
+      }))
+    } else if (type === 'OCO') {
+      // OCO: two linked orders, filling one cancels the other
+      order.limitPrice = limitPrice
+      order.stopPrice = stopPrice
+      order.linkedOrderId = `ORD-${Date.now()}-OCO2`
+
+      const ocoOrder2: Order = {
+        id: `ORD-${Date.now()}-OCO2`,
+        symbol, side, type: 'STOP',
+        quantity, stopPrice, tif: 'GTC',
+        status: 'OPEN', filledQty: 0, filledPrice: 0,
+        createdAt: Date.now(), linkedOrderId: order.id,
+      }
+      order.type = 'LIMIT'
+
+      setState((prev) => ({
+        ...prev,
+        orders: [ocoOrder2, order, ...prev.orders],
+      }))
+    } else if (type === 'TRAILING_STOP') {
+      order.trailAmount = trailAmount
+      order.trailPercent = trailPercent
+      // Calculate initial stop from current price
+      const trail = trailAmount ?? (trailPercent ? currentPrice * trailPercent / 100 : 0)
+      order.stopPrice = side === 'SELL' ? currentPrice - trail : currentPrice + trail
+
+      setState((prev) => ({
+        ...prev,
+        orders: [order, ...prev.orders],
+      }))
     } else {
       // STOP and STOP_LIMIT stay open
       setState((prev) => ({
@@ -215,7 +295,17 @@ export function useTradingEngine() {
       })
 
       if (!changed) return prev
-      return { orders, trades: [...newTrades, ...prev.trades] }
+
+      // Cancel linked orders (OCO / bracket)
+      const filledIds = new Set(orders.filter((o) => o.status === 'FILLED' && o.filledAt).map((o) => o.id))
+      const cancelledLinked = orders.map((o) => {
+        if (o.status === 'OPEN' && o.linkedOrderId && filledIds.has(o.linkedOrderId)) {
+          return { ...o, status: 'CANCELLED' as OrderStatus }
+        }
+        return o
+      })
+
+      return { orders: cancelledLinked, trades: [...newTrades, ...prev.trades] }
     })
   }, [])
 
