@@ -19,6 +19,10 @@ import {
   BarChart3,
   Calendar,
   Puzzle,
+  Users,
+  Coins,
+  Zap,
+  GraduationCap,
 } from 'lucide-react'
 
 const navItems = [
@@ -39,6 +43,10 @@ const navItems = [
   { to: '/analytics', icon: BarChart3, label: 'Analytics' },
   { to: '/calendar', icon: Calendar, label: 'Calendar' },
   { to: '/strategy', icon: Puzzle, label: 'Strategy' },
+  { to: '/social', icon: Users, label: 'Social Trading' },
+  { to: '/crypto', icon: Coins, label: 'Crypto' },
+  { to: '/options-flow', icon: Zap, label: 'Options Flow' },
+  { to: '/learn', icon: GraduationCap, label: 'Learn' },
 ]
 
 const bottomItems = [

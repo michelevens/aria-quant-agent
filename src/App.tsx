@@ -10,6 +10,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { Toaster } from '@/components/ui/sonner'
 import { CommandPalette } from '@/components/CommandPalette'
 import { Login } from '@/pages/Login'
+import { Register } from '@/pages/Register'
 import { Loader2 } from 'lucide-react'
 
 const Dashboard = lazy(() => import('@/pages/Dashboard').then((m) => ({ default: m.Dashboard })))
@@ -31,6 +32,10 @@ const Analytics = lazy(() => import('@/pages/Analytics').then((m) => ({ default:
 const EconomicCalendar = lazy(() => import('@/pages/EconomicCalendar').then((m) => ({ default: m.EconomicCalendar })))
 const StrategyBuilder = lazy(() => import('@/pages/StrategyBuilder').then((m) => ({ default: m.StrategyBuilder })))
 const Profile = lazy(() => import('@/pages/Profile').then((m) => ({ default: m.Profile })))
+const SocialTrading = lazy(() => import('@/pages/SocialTrading').then((m) => ({ default: m.SocialTrading })))
+const CryptoDashboard = lazy(() => import('@/pages/CryptoDashboard').then((m) => ({ default: m.CryptoDashboard })))
+const OptionsFlow = lazy(() => import('@/pages/OptionsFlow').then((m) => ({ default: m.OptionsFlow })))
+const LearnCenter = lazy(() => import('@/pages/LearnCenter').then((m) => ({ default: m.LearnCenter })))
 
 function PageLoader() {
   return (
@@ -72,6 +77,10 @@ function ProtectedRoutes() {
             <Route path="calendar" element={<EconomicCalendar />} />
             <Route path="strategy" element={<StrategyBuilder />} />
             <Route path="profile" element={<Profile />} />
+            <Route path="social" element={<SocialTrading />} />
+            <Route path="crypto" element={<CryptoDashboard />} />
+            <Route path="options-flow" element={<OptionsFlow />} />
+            <Route path="learn" element={<LearnCenter />} />
             <Route path="settings" element={<Settings />} />
           </Route>
         </Routes>
@@ -87,6 +96,7 @@ function AuthGate() {
   return (
     <Routes>
       <Route path="/login" element={isAuthenticated ? <Navigate to="/" replace /> : <Login />} />
+      <Route path="/register" element={isAuthenticated ? <Navigate to="/" replace /> : <Register />} />
       <Route path="/*" element={<ProtectedRoutes />} />
     </Routes>
   )

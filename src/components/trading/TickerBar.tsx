@@ -1,6 +1,7 @@
 import { useMarketIndices } from '@/hooks/useMarketData'
 import { MARKET_INDICES } from '@/data/mockData'
 import { usePriceTick } from '@/hooks/usePriceTick'
+import { useRealtimeSimulator } from '@/hooks/useRealtimeSimulator'
 
 const DISPLAY_NAMES: Record<string, string> = {
   '^GSPC': 'S&P 500',
@@ -38,9 +39,10 @@ function TickerItem({ symbol, value, change, changePercent }: {
 
 export function TickerBar() {
   const { indices, loading } = useMarketIndices()
+  const liveIndices = useRealtimeSimulator(indices, 3000, indices.length > 0)
 
-  const displayData = indices.length > 0
-    ? indices.map((q) => ({
+  const displayData = liveIndices.length > 0
+    ? liveIndices.map((q) => ({
         symbol: DISPLAY_NAMES[q.symbol] ?? q.symbol,
         value: q.price,
         change: q.change,

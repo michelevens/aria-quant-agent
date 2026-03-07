@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { Input } from '@/components/ui/input'
 import { useAuth } from '@/contexts/AuthContext'
 import {
@@ -17,12 +17,10 @@ const features = [
 ]
 
 export function Login() {
-  const { login, register: authRegister } = useAuth()
+  const { login } = useAuth()
   const navigate = useNavigate()
-  const [mode, setMode] = useState<'login' | 'register'>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [name, setName] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -32,9 +30,7 @@ export function Login() {
     setError('')
     setLoading(true)
 
-    const success = mode === 'login'
-      ? await login(email, password)
-      : await authRegister(name, email, password)
+    const success = await login(email, password)
 
     setLoading(false)
     if (success) {
@@ -157,11 +153,9 @@ export function Login() {
             }}
           >
             <div className="mb-6 text-center">
-              <h2 className="text-2xl font-bold text-white">
-                {mode === 'login' ? 'Welcome back' : 'Create Account'}
-              </h2>
+              <h2 className="text-2xl font-bold text-white">Welcome back</h2>
               <p className="mt-1 text-sm" style={{ color: '#6b7280' }}>
-                {mode === 'login' ? 'Sign in to your trading dashboard' : 'Start your quant trading journey'}
+                Sign in to your trading dashboard
               </p>
             </div>
 
@@ -172,20 +166,6 @@ export function Login() {
                   style={{ backgroundColor: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)' }}
                 >
                   {error}
-                </div>
-              )}
-
-              {mode === 'register' && (
-                <div className="space-y-2">
-                  <label className="text-sm font-medium" style={{ color: '#94a3b8' }}>Full Name</label>
-                  <Input
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="John Doe"
-                    className="border-0 text-white"
-                    style={{ backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: '0.75rem' }}
-                    required
-                  />
                 </div>
               )}
 
@@ -235,27 +215,16 @@ export function Login() {
                 }}
               >
                 {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}
-                {mode === 'login' ? 'Sign In' : 'Create Account'}
+                Sign In
               </button>
             </form>
 
-            <div className="mt-6 space-y-3 text-center">
+            <div className="mt-6 text-center">
               <p className="text-sm" style={{ color: '#6b7280' }}>
-                {mode === 'login' ? (
-                  <>
-                    Don&apos;t have an account?{' '}
-                    <button className="font-medium" style={{ color: '#f0c040' }} onClick={() => setMode('register')}>
-                      Sign up
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    Already have an account?{' '}
-                    <button className="font-medium" style={{ color: '#f0c040' }} onClick={() => setMode('login')}>
-                      Sign in
-                    </button>
-                  </>
-                )}
+                Don&apos;t have an account?{' '}
+                <Link to="/register" className="font-medium" style={{ color: '#f0c040' }}>
+                  Sign up
+                </Link>
               </p>
             </div>
           </div>
@@ -299,6 +268,16 @@ export function Login() {
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Bottom-right tagline */}
+      <div className="fixed bottom-4 right-4 text-right">
+        <p className="text-xs font-medium" style={{ color: '#94a3b8' }}>
+          Algorithmic Risk &amp; Investment Agent
+        </p>
+        <p className="text-xs font-bold" style={{ color: '#d4a017' }}>
+          By Acsyom Analytics
+        </p>
       </div>
     </div>
   )

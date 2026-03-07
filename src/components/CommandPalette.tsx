@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input'
 import {
   LayoutDashboard, TrendingUp, Briefcase, LineChart, Eye, ListOrdered,
   Search, Newspaper, Bot, Settings, FlaskConical, Bell, Shield, LayoutGrid,
-  BookOpen, BarChart3, Calendar, Puzzle,
+  BookOpen, BarChart3, Calendar, Puzzle, Users, Coins, Zap, GraduationCap,
 } from 'lucide-react'
 
 interface CommandItem {
@@ -47,6 +47,10 @@ export function CommandPalette() {
     { id: 'calendar', label: 'Economic Calendar', icon: <Calendar className="h-4 w-4" />, action: () => nav('/calendar'), keywords: ['economic', 'fomc', 'cpi', 'nfp', 'events'] },
     { id: 'strategy', label: 'Strategy Builder', icon: <Puzzle className="h-4 w-4" />, action: () => nav('/strategy'), keywords: ['strategy', 'builder', 'rules', 'conditions'] },
     { id: 'settings', label: 'Settings', icon: <Settings className="h-4 w-4" />, action: () => nav('/settings'), keywords: ['config', 'api', 'theme'] },
+    { id: 'social', label: 'Social Trading', icon: <Users className="h-4 w-4" />, action: () => nav('/social'), keywords: ['leaderboard', 'copy', 'follow', 'traders'] },
+    { id: 'crypto', label: 'Crypto Dashboard', icon: <Coins className="h-4 w-4" />, action: () => nav('/crypto'), keywords: ['bitcoin', 'ethereum', 'btc', 'eth', 'defi'] },
+    { id: 'options-flow', label: 'Options Flow', icon: <Zap className="h-4 w-4" />, action: () => nav('/options-flow'), keywords: ['options', 'flow', 'unusual', 'sweep', 'calls', 'puts'] },
+    { id: 'learn', label: 'Learning Center', icon: <GraduationCap className="h-4 w-4" />, action: () => nav('/learn'), keywords: ['learn', 'tutorial', 'glossary', 'education'] },
   ]
 
   const filtered = query.trim()

@@ -14,6 +14,7 @@ import {
   ExternalLink,
   RefreshCw,
   Newspaper,
+  X,
 } from 'lucide-react'
 
 const sentimentConfig = {
@@ -56,6 +57,7 @@ export function News() {
   const [category, setCategory] = useState<Category>('portfolio')
   const [news, setNews] = useState<NewsItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [selectedArticle, setSelectedArticle] = useState<NewsItem | null>(null)
 
   const load = (cat: Category) => {
     setLoading(true)
@@ -154,12 +156,10 @@ export function News() {
                   const sentiment = sentimentConfig[item.sentiment]
                   const Icon = sentiment.icon
                   return (
-                    <a
+                    <button
                       key={item.id}
-                      href={item.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex gap-3 px-4 py-3 transition-colors hover:bg-accent/30"
+                      className="flex w-full gap-3 px-4 py-3 text-left transition-colors hover:bg-accent/30"
+                      onClick={() => setSelectedArticle(item)}
                     >
                       <div className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md ${sentiment.bg}`}>
                         <Icon className={`h-4 w-4 ${sentiment.color}`} />
@@ -169,7 +169,7 @@ export function News() {
                         {item.summary && (
                           <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{item.summary}</p>
                         )}
-                        <div className="mt-1.5 flex items-center gap-2">
+                        <div className="mt-1.5 flex flex-wrap items-center gap-2">
                           <span className="text-xs font-medium text-muted-foreground">{item.source}</span>
                           <span className="text-xs text-muted-foreground">
                             {item.publishedAt > 0 ? timeAgo(item.publishedAt) : ''}
@@ -180,10 +180,9 @@ export function News() {
                           {item.relatedSymbols.slice(0, 3).map((s) => (
                             <Badge key={s} variant="outline" className="h-4 px-1 text-xs">{s}</Badge>
                           ))}
-                          <ExternalLink className="ml-auto h-3 w-3 shrink-0 text-muted-foreground" />
                         </div>
                       </div>
-                    </a>
+                    </button>
                   )
                 })}
               </div>
@@ -191,6 +190,56 @@ export function News() {
           )}
         </CardContent>
       </Card>
+
+      {/* In-app article reader overlay */}
+      {selectedArticle && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setSelectedArticle(null)}>
+          <div className="fixed inset-0 bg-black/60" />
+          <div
+            className="relative z-50 flex h-full max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-xl border border-border bg-card shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Reader header */}
+            <div className="flex items-center justify-between border-b border-border px-4 py-3">
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold">{selectedArticle.title}</p>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span>{selectedArticle.source}</span>
+                  {selectedArticle.publishedAt > 0 && <span>{timeAgo(selectedArticle.publishedAt)}</span>}
+                  {selectedArticle.relatedSymbols.slice(0, 3).map((s) => (
+                    <Badge key={s} variant="outline" className="h-4 px-1 text-xs">{s}</Badge>
+                  ))}
+                </div>
+              </div>
+              <div className="ml-3 flex items-center gap-2">
+                <a
+                  href={selectedArticle.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent"
+                >
+                  <ExternalLink className="h-3 w-3" /> Open original
+                </a>
+                <button
+                  className="flex h-7 w-7 items-center justify-center rounded-md transition-colors hover:bg-accent"
+                  onClick={() => setSelectedArticle(null)}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+            {/* Embedded content */}
+            <div className="flex-1 overflow-hidden">
+              <iframe
+                src={selectedArticle.url}
+                title={selectedArticle.title}
+                className="h-full w-full border-0"
+                sandbox="allow-scripts allow-same-origin"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
