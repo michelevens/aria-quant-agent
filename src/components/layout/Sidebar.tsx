@@ -52,8 +52,8 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         </div>
         <div className="mx-1 h-8 w-px bg-border" />
         <div>
-          <p className="text-xs font-bold tracking-tight" style={{ color: '#d4a017' }}>Acsyom</p>
-          <p className="text-xs" style={{ color: '#c49a15' }}>Analytics</p>
+          <p className="font-bold tracking-tight" style={{ color: '#d4a017', fontSize: '10px' }}>Acsyom</p>
+          <p style={{ color: '#c49a15', fontSize: '9px' }}>Analytics</p>
         </div>
       </div>
 
