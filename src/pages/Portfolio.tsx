@@ -4,6 +4,7 @@ import { PositionsTable } from '@/components/trading/PositionsTable'
 import { RiskMetrics } from '@/components/trading/RiskMetrics'
 import { CorrelationHeatmap } from '@/components/trading/CorrelationHeatmap'
 import { EquityCurve } from '@/components/trading/EquityCurve'
+import { Rebalancer } from '@/components/trading/Rebalancer'
 import { usePortfolioContext } from '@/contexts/PortfolioContext'
 import {
   PieChart,
@@ -101,6 +102,7 @@ export function Portfolio() {
         </div>
       </div>
 
+      <Rebalancer />
       <CorrelationHeatmap />
     </div>
   )

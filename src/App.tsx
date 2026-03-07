@@ -1,9 +1,13 @@
 import { lazy, Suspense } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { PortfolioProvider } from '@/contexts/PortfolioContext'
+import { TradingProvider } from '@/contexts/TradingContext'
+import { AuthProvider, useAuth } from '@/contexts/AuthContext'
+import { ThemeProvider } from '@/contexts/ThemeContext'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { Login } from '@/pages/Login'
 import { Loader2 } from 'lucide-react'
 
 const Dashboard = lazy(() => import('@/pages/Dashboard').then((m) => ({ default: m.Dashboard })))
@@ -16,6 +20,8 @@ const Screener = lazy(() => import('@/pages/Screener').then((m) => ({ default: m
 const News = lazy(() => import('@/pages/News').then((m) => ({ default: m.News })))
 const Agent = lazy(() => import('@/pages/Agent').then((m) => ({ default: m.Agent })))
 const Settings = lazy(() => import('@/pages/Settings').then((m) => ({ default: m.Settings })))
+const Backtest = lazy(() => import('@/pages/Backtest').then((m) => ({ default: m.Backtest })))
+const Alerts = lazy(() => import('@/pages/Alerts').then((m) => ({ default: m.Alerts })))
 
 function PageLoader() {
   return (
@@ -25,13 +31,17 @@ function PageLoader() {
   )
 }
 
-function App() {
+function ProtectedRoutes() {
+  const { isAuthenticated } = useAuth()
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />
+  }
+
   return (
-    <BrowserRouter basename="/aria-quant-agent">
-      <ErrorBoundary>
-      <TooltipProvider>
-        <PortfolioProvider>
-        <Suspense fallback={<PageLoader />}>
+    <PortfolioProvider>
+      <TradingProvider>
+      <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route element={<AppLayout />}>
             <Route index element={<Dashboard />} />
@@ -43,12 +53,39 @@ function App() {
             <Route path="screener" element={<Screener />} />
             <Route path="news" element={<News />} />
             <Route path="agent" element={<Agent />} />
+            <Route path="backtest" element={<Backtest />} />
+            <Route path="alerts" element={<Alerts />} />
             <Route path="settings" element={<Settings />} />
           </Route>
         </Routes>
-        </Suspense>
-        </PortfolioProvider>
+      </Suspense>
+      </TradingProvider>
+    </PortfolioProvider>
+  )
+}
+
+function AuthGate() {
+  const { isAuthenticated } = useAuth()
+
+  return (
+    <Routes>
+      <Route path="/login" element={isAuthenticated ? <Navigate to="/" replace /> : <Login />} />
+      <Route path="/*" element={<ProtectedRoutes />} />
+    </Routes>
+  )
+}
+
+function App() {
+  return (
+    <BrowserRouter basename="/aria-quant-agent">
+      <ErrorBoundary>
+      <ThemeProvider>
+      <TooltipProvider>
+        <AuthProvider>
+          <AuthGate />
+        </AuthProvider>
       </TooltipProvider>
+      </ThemeProvider>
       </ErrorBoundary>
     </BrowserRouter>
   )

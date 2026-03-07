@@ -11,41 +11,96 @@ import {
   Line,
   ComposedChart,
   ReferenceLine,
+  Cell,
+  Rectangle,
 } from 'recharts'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useTechnicalAnalysis } from '@/hooks/useMarketData'
 import { sma, bollingerBands } from '@/lib/analytics/technicals'
-import { TrendingUp, TrendingDown, Loader2 } from 'lucide-react'
+import { TrendingUp, TrendingDown, Loader2, CandlestickChart, LineChart } from 'lucide-react'
 import type { TimeRange } from '@/types/market'
 
 const timeframes: TimeRange[] = ['1D', '5D', '1M', '3M', '1Y', '5Y']
 
+type ChartMode = 'line' | 'candle'
+
 interface ChartDataPoint {
   date: string
+  open: number
+  high: number
+  low: number
   close: number
   volume: number
   sma20?: number
   sma50?: number
   bbUpper?: number
   bbLower?: number
+  // Candlestick helpers
+  candleBody: [number, number]
+  candleWick: [number, number]
+  isGreen: boolean
+}
+
+// Custom candlestick shape
+function CandlestickShape(props: Record<string, unknown>) {
+  const { x, y, width, height, payload } = props as {
+    x: number
+    y: number
+    width: number
+    height: number
+    payload: ChartDataPoint
+  }
+  if (!payload) return null
+
+  const { open, high, low, close } = payload
+  const isGreen = close >= open
+  const fill = isGreen ? '#10b981' : '#ef4444'
+  const stroke = isGreen ? '#10b981' : '#ef4444'
+
+  // Body dimensions from the bar
+  const bodyX = x
+  const bodyY = y
+  const bodyWidth = Math.max(width, 2)
+  const bodyHeight = Math.max(Math.abs(height), 1)
+
+  // Wick (thin line from low to high)
+  const centerX = x + bodyWidth / 2
+
+  // We need to calculate wick positions relative to the chart area
+  // The bar gives us body position, wick extends beyond
+  const priceRange = Math.max(high, open, close) - Math.min(low, open, close)
+  if (priceRange === 0) return null
+
+  const pixelPerUnit = bodyHeight / Math.abs(close - open || 0.01)
+  const wickTop = bodyY - (high - Math.max(open, close)) * pixelPerUnit
+  const wickBottom = bodyY + bodyHeight + (Math.min(open, close) - low) * pixelPerUnit
+
+  return (
+    <g>
+      {/* Wick */}
+      <line x1={centerX} y1={wickTop} x2={centerX} y2={wickBottom} stroke={stroke} strokeWidth={1} />
+      {/* Body */}
+      <Rectangle x={bodyX} y={bodyY} width={bodyWidth} height={bodyHeight} fill={fill} stroke={stroke} />
+    </g>
+  )
 }
 
 export function PriceChart({ symbol = 'NVDA' }: { symbol?: string }) {
   const [timeframe, setTimeframe] = useState<TimeRange>('3M')
   const [showSMA, setShowSMA] = useState(true)
   const [showBB, setShowBB] = useState(false)
+  const [chartMode, setChartMode] = useState<ChartMode>('candle')
 
   const { data: bars, indicators, signal, loading, error } = useTechnicalAnalysis(symbol, timeframe)
 
-  // Transform OHLCV to chart data with overlays
   const chartData: ChartDataPoint[] = (() => {
     if (bars.length === 0) return []
 
     const closes = bars.map((b) => b.close)
-    const sma20 = sma(closes, 20)
-    const sma50 = sma(closes, 50)
+    const sma20Arr = sma(closes, 20)
+    const sma50Arr = sma(closes, 50)
     const bb = bollingerBands(closes, 20, 2)
 
     return bars.map((bar, i) => {
@@ -54,14 +109,22 @@ export function PriceChart({ symbol = 'NVDA' }: { symbol?: string }) {
         ? d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
         : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 
+      const isGreen = bar.close >= bar.open
+
       return {
         date: dateStr,
+        open: bar.open,
+        high: bar.high,
+        low: bar.low,
         close: bar.close,
         volume: bar.volume,
-        sma20: isNaN(sma20[i]) ? undefined : sma20[i],
-        sma50: isNaN(sma50[i]) ? undefined : sma50[i],
+        sma20: isNaN(sma20Arr[i]) ? undefined : sma20Arr[i],
+        sma50: isNaN(sma50Arr[i]) ? undefined : sma50Arr[i],
         bbUpper: isNaN(bb.upper[i]) ? undefined : bb.upper[i],
         bbLower: isNaN(bb.lower[i]) ? undefined : bb.lower[i],
+        candleBody: isGreen ? [bar.open, bar.close] : [bar.close, bar.open],
+        candleWick: [bar.low, bar.high],
+        isGreen,
       }
     })
   })()
@@ -141,6 +204,24 @@ export function PriceChart({ symbol = 'NVDA' }: { symbol?: string }) {
           </div>
           <div className="flex gap-1">
             <Button
+              variant={chartMode === 'candle' ? 'secondary' : 'ghost'}
+              size="sm"
+              className="h-6 px-2 text-xs"
+              onClick={() => setChartMode('candle')}
+              title="Candlestick"
+            >
+              <CandlestickChart className="h-3 w-3" />
+            </Button>
+            <Button
+              variant={chartMode === 'line' ? 'secondary' : 'ghost'}
+              size="sm"
+              className="h-6 px-2 text-xs"
+              onClick={() => setChartMode('line')}
+              title="Line"
+            >
+              <LineChart className="h-3 w-3" />
+            </Button>
+            <Button
               variant={showSMA ? 'secondary' : 'ghost'}
               size="sm"
               className="h-6 px-2 text-xs"
@@ -192,6 +273,12 @@ export function PriceChart({ symbol = 'NVDA' }: { symbol?: string }) {
                   fontSize: '12px',
                 }}
                 labelStyle={{ color: 'hsl(0 0% 70%)' }}
+                formatter={(value, name) => {
+                  if (name === 'candleBody') return null
+                  const n = name as string
+                  const labels: Record<string, string> = { close: 'Close', open: 'Open', high: 'High', low: 'Low', sma20: 'SMA20', sma50: 'SMA50', bbUpper: 'BB Upper', bbLower: 'BB Lower' }
+                  return [`$${Number(value).toFixed(2)}`, labels[n] ?? n]
+                }}
               />
               {showBB && (
                 <>
@@ -201,13 +288,23 @@ export function PriceChart({ symbol = 'NVDA' }: { symbol?: string }) {
                   <Line type="monotone" dataKey="bbLower" stroke="hsl(210 50% 50%)" strokeWidth={1} strokeDasharray="4 2" dot={false} />
                 </>
               )}
-              <Area
-                type="monotone"
-                dataKey="close"
-                stroke={isPositive ? '#10b981' : '#ef4444'}
-                strokeWidth={2}
-                fill={`url(#${gradientId})`}
-              />
+
+              {chartMode === 'candle' ? (
+                <Bar dataKey="candleBody" shape={<CandlestickShape />} isAnimationActive={false}>
+                  {chartData.map((entry, index) => (
+                    <Cell key={index} fill={entry.isGreen ? '#10b981' : '#ef4444'} />
+                  ))}
+                </Bar>
+              ) : (
+                <Area
+                  type="monotone"
+                  dataKey="close"
+                  stroke={isPositive ? '#10b981' : '#ef4444'}
+                  strokeWidth={2}
+                  fill={`url(#${gradientId})`}
+                />
+              )}
+
               {showSMA && (
                 <>
                   <Line type="monotone" dataKey="sma20" stroke="#f59e0b" strokeWidth={1} dot={false} />
@@ -226,7 +323,11 @@ export function PriceChart({ symbol = 'NVDA' }: { symbol?: string }) {
         <div style={{ height: '50px' }}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} margin={{ top: 0, right: 5, left: 0, bottom: 0 }}>
-              <Bar dataKey="volume" fill="hsl(0 0% 25%)" radius={[1, 1, 0, 0]} />
+              <Bar dataKey="volume" radius={[1, 1, 0, 0]}>
+                {chartData.map((entry, index) => (
+                  <Cell key={index} fill={entry.isGreen ? 'rgba(16, 185, 129, 0.4)' : 'rgba(239, 68, 68, 0.4)'} />
+                ))}
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>

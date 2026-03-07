@@ -11,6 +11,8 @@ import {
   Settings,
   TrendingUp,
   Search,
+  FlaskConical,
+  Bell,
 } from 'lucide-react'
 
 const navItems = [
@@ -23,6 +25,8 @@ const navItems = [
   { to: '/screener', icon: Search, label: 'Screener' },
   { to: '/news', icon: Newspaper, label: 'News' },
   { to: '/agent', icon: Bot, label: 'AI Agent' },
+  { to: '/backtest', icon: FlaskConical, label: 'Backtest' },
+  { to: '/alerts', icon: Bell, label: 'Alerts' },
 ]
 
 const bottomItems = [

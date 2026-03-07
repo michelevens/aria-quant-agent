@@ -2,29 +2,31 @@ import { useState, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { usePortfolioContext } from '@/contexts/PortfolioContext'
 import { fetchHistoricalData } from '@/services/marketData'
 import { generateSignal } from '@/lib/strategies/signals'
 import { computeIndicators } from '@/lib/analytics/technicals'
-import type { Signal } from '@/types/market'
+import { dailyReturns, stddev, correlation, sharpeRatio } from '@/lib/analytics/portfolio'
+import type { Signal, OHLCV } from '@/types/market'
 import {
   Bot,
   Play,
   Square,
-
   Activity,
   Brain,
   Shield,
   Zap,
   Loader2,
   RefreshCw,
+  AlertTriangle,
+  TrendingUp,
+  TrendingDown,
 } from 'lucide-react'
 
 interface LogEntry {
   time: string
-  type: 'info' | 'analysis' | 'signal' | 'trade' | 'risk'
+  type: 'info' | 'analysis' | 'signal' | 'trade' | 'risk' | 'warning'
   message: string
 }
 
@@ -34,10 +36,17 @@ const logColors: Record<string, string> = {
   signal: 'text-yellow-400',
   trade: 'text-emerald-400',
   risk: 'text-red-400',
+  warning: 'text-orange-400',
 }
 
 function timeStr(): string {
   return new Date().toLocaleTimeString('en-US', { hour12: false })
+}
+
+interface PortfolioInsight {
+  type: 'risk' | 'opportunity' | 'warning'
+  title: string
+  description: string
 }
 
 export function Agent() {
@@ -46,6 +55,7 @@ export function Agent() {
   const [scanning, setScanning] = useState(false)
   const [logs, setLogs] = useState<LogEntry[]>([])
   const [signals, setSignals] = useState<Signal[]>([])
+  const [insights, setInsights] = useState<PortfolioInsight[]>([])
 
   const addLog = useCallback((type: LogEntry['type'], message: string) => {
     setLogs((prev) => [...prev, { time: timeStr(), type, message }])
@@ -54,14 +64,22 @@ export function Agent() {
   const runScan = useCallback(async () => {
     if (holdings.length === 0) return
     setScanning(true)
-    addLog('info', `Starting scan of ${holdings.length} positions...`)
+    setInsights([])
+    addLog('info', `Aria Quant Agent v2.0 — Multi-Strategy Analysis`)
+    addLog('info', `Scanning ${holdings.length} positions | Portfolio: $${totals.totalValue.toLocaleString()}`)
+    addLog('info', '---')
 
     const newSignals: Signal[] = []
+    const allHistoricals: OHLCV[][] = []
+    const newInsights: PortfolioInsight[] = []
 
+    // Phase 1: Individual stock analysis
+    addLog('analysis', 'Phase 1: Individual Technical Analysis')
     for (const holding of holdings) {
       try {
         addLog('info', `Analyzing ${holding.symbol}...`)
         const data = await fetchHistoricalData(holding.symbol, '1Y')
+        allHistoricals.push(data)
 
         if (data.length < 50) {
           addLog('info', `${holding.symbol}: Insufficient data, skipping`)
@@ -72,31 +90,104 @@ export function Agent() {
         const signal = generateSignal(holding.symbol, data)
         newSignals.push(signal)
 
-        // Log analysis
-        addLog('analysis', `${holding.symbol}: RSI=${ind.rsi14.toFixed(1)} | MACD hist=${ind.macd.histogram.toFixed(2)} | ADX=${ind.adx14.toFixed(1)}`)
+        addLog('analysis', `${holding.symbol}: RSI=${ind.rsi14.toFixed(1)} | MACD hist=${ind.macd.histogram.toFixed(2)} | ADX=${ind.adx14.toFixed(1)} | Stoch %K=${ind.stochastic.k.toFixed(1)}`)
 
         if (signal.type !== 'HOLD') {
           addLog('signal', `${signal.type} ${holding.symbol} @ $${signal.price.toFixed(2)} | Confidence: ${signal.strength}% | R:R ${signal.riskReward}:1`)
         }
+
+        if (ind.rsi14 > 75) {
+          newInsights.push({ type: 'warning', title: `${holding.symbol} Extremely Overbought`, description: `RSI at ${ind.rsi14.toFixed(1)} — consider trimming position or tightening stops` })
+        } else if (ind.rsi14 < 25) {
+          newInsights.push({ type: 'opportunity', title: `${holding.symbol} Deeply Oversold`, description: `RSI at ${ind.rsi14.toFixed(1)} — potential mean-reversion opportunity` })
+        }
+
+        if (ind.adx14 > 40 && signal.type === 'SELL') {
+          newInsights.push({ type: 'risk', title: `${holding.symbol} Strong Downtrend`, description: `ADX=${ind.adx14.toFixed(1)} with bearish signal — high conviction sell` })
+        }
       } catch {
         addLog('info', `${holding.symbol}: Failed to fetch data`)
+        allHistoricals.push([])
       }
     }
 
-    // Risk assessment
-    const buySignals = newSignals.filter((s) => s.type === 'BUY').length
-    const sellSignals = newSignals.filter((s) => s.type === 'SELL').length
-    addLog('risk', `Scan complete: ${buySignals} BUY, ${sellSignals} SELL, ${newSignals.length - buySignals - sellSignals} HOLD`)
-    addLog('info', `Portfolio value: $${totals.totalValue.toLocaleString()} | Day P&L: ${totals.dayChange >= 0 ? '+' : ''}$${totals.dayChange.toFixed(2)}`)
+    // Phase 2: Portfolio-level risk analysis
+    addLog('info', '---')
+    addLog('risk', 'Phase 2: Portfolio Risk Assessment')
+
+    try {
+      const spData = await fetchHistoricalData('^GSPC', '1Y').catch(() => [] as OHLCV[])
+
+      if (spData.length > 50) {
+        const spReturns = dailyReturns(spData)
+        const portfolioReturns: number[] = []
+        const totalWeight = holdings.reduce((s, h) => s + h.marketValue, 0)
+        const weights = holdings.map((h) => h.marketValue / (totalWeight || 1))
+        const minLen = Math.min(spData.length, ...allHistoricals.map((h) => h.length))
+
+        if (minLen > 30) {
+          for (let i = 1; i < minLen; i++) {
+            let dayReturn = 0
+            for (let j = 0; j < allHistoricals.length; j++) {
+              const d = allHistoricals[j]
+              if (d.length >= minLen && d[i - 1].close > 0) {
+                const ret = (d[i].close - d[i - 1].close) / d[i - 1].close
+                dayReturn += ret * weights[j]
+              }
+            }
+            portfolioReturns.push(dayReturn)
+          }
+
+          const vol = stddev(portfolioReturns) * Math.sqrt(252) * 100
+          const corr = correlation(portfolioReturns, spReturns.slice(0, portfolioReturns.length))
+          const sr = sharpeRatio(portfolioReturns)
+
+          addLog('risk', `Portfolio Volatility: ${vol.toFixed(1)}% (annualized)`)
+          addLog('risk', `S&P Correlation: ${corr.toFixed(2)}`)
+          addLog('risk', `Sharpe Ratio: ${sr.toFixed(2)}`)
+
+          if (vol > 35) {
+            newInsights.push({ type: 'risk', title: 'High Portfolio Volatility', description: `Portfolio vol at ${vol.toFixed(1)}% — consider adding low-beta or bond positions` })
+          }
+          if (corr > 0.9) {
+            newInsights.push({ type: 'warning', title: 'Low Diversification', description: `S&P correlation at ${corr.toFixed(2)} — portfolio moves in lockstep with market` })
+          }
+          if (sr < 0.5) {
+            newInsights.push({ type: 'warning', title: 'Poor Risk-Adjusted Returns', description: `Sharpe ratio ${sr.toFixed(2)} — risk is not being compensated with returns` })
+          }
+        }
+      }
+    } catch {
+      addLog('info', 'Could not compute portfolio-level risk metrics')
+    }
+
+    // Phase 3: Concentration risk
+    addLog('info', '---')
+    addLog('analysis', 'Phase 3: Concentration & Sector Analysis')
+
+    const topHolding = holdings.reduce((max, h) => h.weight > max.weight ? h : max, holdings[0])
+    if (topHolding && topHolding.weight > 20) {
+      addLog('warning', `Concentration risk: ${topHolding.symbol} is ${topHolding.weight.toFixed(1)}% of portfolio`)
+      newInsights.push({ type: 'risk', title: 'Concentration Risk', description: `${topHolding.symbol} represents ${topHolding.weight.toFixed(1)}% of portfolio — consider trimming to <15%` })
+    }
+
+    // Summary
+    addLog('info', '---')
+    const buySignalsList = newSignals.filter((s) => s.type === 'BUY')
+    const sellSignalsList = newSignals.filter((s) => s.type === 'SELL')
+    addLog('signal', `Scan complete: ${buySignalsList.length} BUY, ${sellSignalsList.length} SELL, ${newSignals.length - buySignalsList.length - sellSignalsList.length} HOLD`)
+    addLog('info', `Generated ${newInsights.length} portfolio insights`)
+    addLog('info', `Portfolio: $${totals.totalValue.toLocaleString()} | Day P&L: ${totals.dayChange >= 0 ? '+' : ''}$${totals.dayChange.toFixed(2)}`)
 
     setSignals(newSignals)
+    setInsights(newInsights)
     setScanning(false)
   }, [holdings, totals, addLog])
 
   const handleStart = () => {
     setRunning(true)
     setLogs([])
-    addLog('info', 'Aria Quant Agent activated. Initializing market scan...')
+    setSignals([])
     runScan()
   }
 
@@ -119,13 +210,7 @@ export function Agent() {
           {scanning && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
         </div>
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-1 text-xs"
-            onClick={handleStart}
-            disabled={scanning}
-          >
+          <Button variant="outline" size="sm" className="gap-1 text-xs" onClick={handleStart} disabled={scanning}>
             <Play className="h-3.5 w-3.5" />
             {running ? 'Re-scan' : 'Start'}
           </Button>
@@ -144,7 +229,7 @@ export function Agent() {
             <Brain className="h-5 w-5 text-primary" />
             <div>
               <p className="text-xs text-muted-foreground">Strategy</p>
-              <p className="text-sm font-medium">Multi-Factor Quant</p>
+              <p className="text-sm font-medium">Multi-Factor v2</p>
             </div>
           </CardContent>
         </Card>
@@ -170,15 +255,45 @@ export function Agent() {
           <CardContent className="flex items-center gap-3 py-3 px-4">
             <Shield className="h-5 w-5 text-blue-500" />
             <div>
-              <p className="text-xs text-muted-foreground">Positions Scanned</p>
-              <p className="text-sm font-medium">{signals.length} / {holdings.length}</p>
+              <p className="text-xs text-muted-foreground">Insights</p>
+              <p className="text-sm font-medium">{insights.length}</p>
             </div>
           </CardContent>
         </Card>
       </div>
 
+      {insights.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <AlertTriangle className="h-4 w-4" />
+              Portfolio Insights
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {insights.map((insight, i) => (
+              <div
+                key={i}
+                className={`flex items-start gap-3 rounded-md px-3 py-2 ${
+                  insight.type === 'risk' ? 'bg-red-500/10' : insight.type === 'warning' ? 'bg-yellow-500/10' : 'bg-emerald-500/10'
+                }`}
+              >
+                <div className="mt-0.5">
+                  {insight.type === 'risk' ? <Shield className="h-4 w-4 text-red-500" /> :
+                   insight.type === 'warning' ? <AlertTriangle className="h-4 w-4 text-yellow-500" /> :
+                   <TrendingUp className="h-4 w-4 text-emerald-500" />}
+                </div>
+                <div>
+                  <p className="text-sm font-medium">{insight.title}</p>
+                  <p className="text-xs text-muted-foreground">{insight.description}</p>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid gap-4 lg:grid-cols-2">
-        {/* Agent Log */}
         <Card className="flex flex-col">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm">
@@ -206,7 +321,6 @@ export function Agent() {
           </CardContent>
         </Card>
 
-        {/* Signals */}
         <Card className="flex flex-col">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center justify-between text-sm">
@@ -233,22 +347,17 @@ export function Agent() {
                       <div key={sig.symbol} className="px-4 py-3">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
+                            {sig.type === 'BUY' ? <TrendingUp className="h-3.5 w-3.5 text-emerald-500" /> : sig.type === 'SELL' ? <TrendingDown className="h-3.5 w-3.5 text-red-500" /> : null}
                             <span className="text-sm font-bold">{sig.symbol}</span>
                             <Badge
                               className={`text-xs ${
-                                sig.type === 'BUY'
-                                  ? 'bg-emerald-600'
-                                  : sig.type === 'SELL'
-                                  ? 'bg-red-600'
-                                  : 'bg-zinc-600'
+                                sig.type === 'BUY' ? 'bg-emerald-600' : sig.type === 'SELL' ? 'bg-red-600' : 'bg-zinc-600'
                               }`}
                             >
                               {sig.type}
                             </Badge>
                           </div>
-                          <span className="text-xs text-muted-foreground">
-                            {sig.strength}% confidence
-                          </span>
+                          <span className="text-xs text-muted-foreground">{sig.strength}% confidence</span>
                         </div>
                         <p className="mt-1 text-xs text-muted-foreground">{sig.reason}</p>
                         <div className="mt-2 flex gap-4 text-xs">
