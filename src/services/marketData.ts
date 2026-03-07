@@ -52,69 +52,83 @@ export async function fetchHistoricalData(
   })).filter((bar) => bar.close > 0)
 }
 
+// Extract quote data from v8 chart endpoint (v6 quote endpoint is deprecated)
+function parseChartToQuote(json: Record<string, unknown>, symbol: string): Quote | null {
+  const result = (json as { chart?: { result?: Record<string, unknown>[] } }).chart?.result?.[0]
+  if (!result) return null
+
+  const meta = result.meta as Record<string, unknown> | undefined
+  if (!meta) return null
+
+  const quotesArr = ((result.indicators as Record<string, unknown>)?.quote as Record<string, unknown>[]) ?? []
+  const q = quotesArr[0] ?? {}
+  const volumes = (q.volume as (number | null)[]) ?? []
+  const closes = (q.close as (number | null)[]) ?? []
+  const highs = (q.high as (number | null)[]) ?? []
+  const lows = (q.low as (number | null)[]) ?? []
+  const opens = (q.open as (number | null)[]) ?? []
+
+  const price = (meta.regularMarketPrice as number) ?? closes.filter(Boolean).pop() ?? 0
+  const previousClose = (meta.chartPreviousClose as number) ?? (meta.previousClose as number) ?? 0
+  const change = previousClose > 0 ? price - previousClose : 0
+  const changePercent = previousClose > 0 ? (change / previousClose) * 100 : 0
+
+  const totalVolume = volumes.reduce<number>((sum, v) => sum + (v ?? 0), 0)
+
+  return {
+    symbol: (meta.symbol as string) ?? symbol,
+    name: (meta.shortName as string) ?? (meta.longName as string) ?? symbol,
+    price,
+    change,
+    changePercent,
+    open: opens[0] ?? price,
+    high: Math.max(...highs.filter((v): v is number => v !== null && v > 0), price),
+    low: Math.min(...lows.filter((v): v is number => v !== null && v > 0), price),
+    previousClose,
+    volume: (meta.regularMarketVolume as number) ?? totalVolume,
+    avgVolume: 0,
+    marketCap: 0,
+    pe: 0,
+    eps: 0,
+    fiftyTwoWeekHigh: (meta.fiftyTwoWeekHigh as number) ?? 0,
+    fiftyTwoWeekLow: (meta.fiftyTwoWeekLow as number) ?? 0,
+    exchange: (meta.exchangeName as string) ?? '',
+  }
+}
+
 export async function fetchQuote(symbol: string): Promise<Quote> {
   const url = buildYahooUrl(
-    `/v6/finance/quote?symbols=${symbol}`
+    `/v8/finance/chart/${symbol}?range=1d&interval=5m&includePrePost=false`
   )
 
   const res = await fetch(url)
   if (!res.ok) throw new Error(`Failed to fetch quote for ${symbol}`)
 
   const json = await res.json()
-  const q = json.quoteResponse?.result?.[0]
-  if (!q) throw new Error(`No quote data for ${symbol}`)
-
-  return {
-    symbol: q.symbol,
-    name: q.shortName ?? q.longName ?? symbol,
-    price: q.regularMarketPrice ?? 0,
-    change: q.regularMarketChange ?? 0,
-    changePercent: q.regularMarketChangePercent ?? 0,
-    open: q.regularMarketOpen ?? 0,
-    high: q.regularMarketDayHigh ?? 0,
-    low: q.regularMarketDayLow ?? 0,
-    previousClose: q.regularMarketPreviousClose ?? 0,
-    volume: q.regularMarketVolume ?? 0,
-    avgVolume: q.averageDailyVolume3Month ?? 0,
-    marketCap: q.marketCap ?? 0,
-    pe: q.trailingPE ?? 0,
-    eps: q.epsTrailingTwelveMonths ?? 0,
-    fiftyTwoWeekHigh: q.fiftyTwoWeekHigh ?? 0,
-    fiftyTwoWeekLow: q.fiftyTwoWeekLow ?? 0,
-    exchange: q.exchange ?? '',
-  }
+  const quote = parseChartToQuote(json, symbol)
+  if (!quote) throw new Error(`No quote data for ${symbol}`)
+  return quote
 }
 
 export async function fetchMultipleQuotes(symbols: string[]): Promise<Quote[]> {
-  const url = buildYahooUrl(
-    `/v6/finance/quote?symbols=${symbols.join(',')}`
-  )
+  // Fetch in parallel batches of 6 to avoid rate limiting
+  const batchSize = 6
+  const results: Quote[] = []
 
-  const res = await fetch(url)
-  if (!res.ok) throw new Error('Failed to fetch quotes')
+  for (let i = 0; i < symbols.length; i += batchSize) {
+    const batch = symbols.slice(i, i + batchSize)
+    const promises = batch.map(async (symbol) => {
+      try {
+        return await fetchQuote(symbol)
+      } catch {
+        return null
+      }
+    })
+    const batchResults = await Promise.all(promises)
+    results.push(...batchResults.filter((q): q is Quote => q !== null))
+  }
 
-  const json = await res.json()
-  const results = json.quoteResponse?.result ?? []
-
-  return results.map((q: Record<string, unknown>) => ({
-    symbol: q.symbol as string,
-    name: (q.shortName ?? q.longName ?? q.symbol) as string,
-    price: (q.regularMarketPrice ?? 0) as number,
-    change: (q.regularMarketChange ?? 0) as number,
-    changePercent: (q.regularMarketChangePercent ?? 0) as number,
-    open: (q.regularMarketOpen ?? 0) as number,
-    high: (q.regularMarketDayHigh ?? 0) as number,
-    low: (q.regularMarketDayLow ?? 0) as number,
-    previousClose: (q.regularMarketPreviousClose ?? 0) as number,
-    volume: (q.regularMarketVolume ?? 0) as number,
-    avgVolume: (q.averageDailyVolume3Month ?? 0) as number,
-    marketCap: (q.marketCap ?? 0) as number,
-    pe: (q.trailingPE ?? 0) as number,
-    eps: (q.epsTrailingTwelveMonths ?? 0) as number,
-    fiftyTwoWeekHigh: (q.fiftyTwoWeekHigh ?? 0) as number,
-    fiftyTwoWeekLow: (q.fiftyTwoWeekLow ?? 0) as number,
-    exchange: (q.exchange ?? '') as string,
-  }))
+  return results
 }
 
 export async function fetchMarketIndices(): Promise<Quote[]> {
