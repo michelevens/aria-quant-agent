@@ -1,3 +1,4 @@
+import { useState, useEffect, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { PortfolioSummary } from '@/components/trading/PortfolioSummary'
@@ -10,11 +11,44 @@ import { Sparkline } from '@/components/trading/Sparkline'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { usePortfolioContext } from '@/contexts/PortfolioContext'
 import { useTradingContext } from '@/contexts/TradingContext'
-import { TrendingUp, TrendingDown, Clock } from 'lucide-react'
+import { fetchMultipleQuotes } from '@/services/marketData'
+import type { Quote } from '@/types/market'
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
+} from 'recharts'
+import {
+  TrendingUp, TrendingDown, Clock, Gauge, Activity, Globe,
+} from 'lucide-react'
+
+const SECTOR_ETFS = ['XLK', 'XLV', 'XLF', 'XLE', 'XLI', 'XLP', 'XLU', 'XLRE', 'XLC', 'XLY', 'XLB']
+
+const FEAR_GREED = 62 // mock
+
+function getFGLabel(v: number) {
+  if (v >= 75) return { label: 'Extreme Greed', color: '#10b981' }
+  if (v >= 55) return { label: 'Greed', color: '#34d399' }
+  if (v >= 45) return { label: 'Neutral', color: '#f59e0b' }
+  if (v >= 25) return { label: 'Fear', color: '#f87171' }
+  return { label: 'Extreme Fear', color: '#ef4444' }
+}
 
 export function Dashboard() {
   const { holdings, totals } = usePortfolioContext()
   const { trades } = useTradingContext()
+  const [sectors, setSectors] = useState<Quote[]>([])
+
+  useEffect(() => {
+    fetchMultipleQuotes(SECTOR_ETFS).then(setSectors).catch(() => {})
+  }, [])
+
+  const sectorData = useMemo(() =>
+    sectors.map((s) => ({
+      name: s.symbol.replace('XL', ''),
+      symbol: s.symbol,
+      change: s.changePercent,
+    })).sort((a, b) => b.change - a.change),
+    [sectors]
+  )
 
   const topMovers = [...holdings]
     .sort((a, b) => Math.abs(b.changePercent) - Math.abs(a.changePercent))
@@ -24,9 +58,77 @@ export function Dashboard() {
     .sort((a, b) => b.timestamp - a.timestamp)
     .slice(0, 5)
 
+  const fg = getFGLabel(FEAR_GREED)
+
   return (
     <div className="space-y-4">
       <PortfolioSummary />
+
+      {/* Market Overview Row */}
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Card>
+          <CardContent className="flex items-center gap-3 py-3 px-4">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-accent">
+              <Gauge className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Fear & Greed</p>
+              <p className="text-lg font-bold" style={{ color: fg.color }}>{FEAR_GREED}</p>
+              <p className="text-xs" style={{ color: fg.color }}>{fg.label}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex items-center gap-3 py-3 px-4">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-accent">
+              <Activity className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">VIX</p>
+              <p className="text-lg font-bold">18.4</p>
+              <p className="text-xs text-muted-foreground">Normal volatility</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex items-center gap-3 py-3 px-4">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-accent">
+              <Globe className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Market Breadth</p>
+              <p className="text-lg font-bold text-emerald-500">68%</p>
+              <p className="text-xs text-muted-foreground">Above 200 DMA</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Sector Performance */}
+      {sectorData.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Sector Performance Today</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={160}>
+              <BarChart data={sectorData}>
+                <XAxis dataKey="symbol" tick={{ fontSize: 10 }} />
+                <YAxis tick={{ fontSize: 10 }} tickFormatter={(v: number) => `${v}%`} />
+                <Tooltip
+                  contentStyle={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12 }}
+                  formatter={(v) => [`${Number(v).toFixed(2)}%`, 'Change']}
+                />
+                <Bar dataKey="change" radius={[4, 4, 0, 0]}>
+                  {sectorData.map((s, i) => (
+                    <Cell key={i} fill={s.change >= 0 ? '#10b981' : '#ef4444'} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">

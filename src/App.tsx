@@ -36,6 +36,9 @@ const SocialTrading = lazy(() => import('@/pages/SocialTrading').then((m) => ({ 
 const CryptoDashboard = lazy(() => import('@/pages/CryptoDashboard').then((m) => ({ default: m.CryptoDashboard })))
 const OptionsFlow = lazy(() => import('@/pages/OptionsFlow').then((m) => ({ default: m.OptionsFlow })))
 const LearnCenter = lazy(() => import('@/pages/LearnCenter').then((m) => ({ default: m.LearnCenter })))
+const PerformanceAttribution = lazy(() => import('@/pages/PerformanceAttribution').then((m) => ({ default: m.PerformanceAttribution })))
+const SentimentDashboard = lazy(() => import('@/pages/SentimentDashboard').then((m) => ({ default: m.SentimentDashboard })))
+const MarketBreadth = lazy(() => import('@/pages/MarketBreadth').then((m) => ({ default: m.MarketBreadth })))
 
 function PageLoader() {
   return (
@@ -81,6 +84,9 @@ function ProtectedRoutes() {
             <Route path="crypto" element={<CryptoDashboard />} />
             <Route path="options-flow" element={<OptionsFlow />} />
             <Route path="learn" element={<LearnCenter />} />
+            <Route path="performance" element={<PerformanceAttribution />} />
+            <Route path="sentiment" element={<SentimentDashboard />} />
+            <Route path="breadth" element={<MarketBreadth />} />
             <Route path="settings" element={<Settings />} />
           </Route>
         </Routes>

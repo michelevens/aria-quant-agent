@@ -6,6 +6,7 @@ import {
   LayoutDashboard, TrendingUp, Briefcase, LineChart, Eye, ListOrdered,
   Search, Newspaper, Bot, Settings, FlaskConical, Bell, Shield, LayoutGrid,
   BookOpen, BarChart3, Calendar, Puzzle, Users, Coins, Zap, GraduationCap,
+  Gauge, Activity,
 } from 'lucide-react'
 
 interface CommandItem {
@@ -51,6 +52,9 @@ export function CommandPalette() {
     { id: 'crypto', label: 'Crypto Dashboard', icon: <Coins className="h-4 w-4" />, action: () => nav('/crypto'), keywords: ['bitcoin', 'ethereum', 'btc', 'eth', 'defi'] },
     { id: 'options-flow', label: 'Options Flow', icon: <Zap className="h-4 w-4" />, action: () => nav('/options-flow'), keywords: ['options', 'flow', 'unusual', 'sweep', 'calls', 'puts'] },
     { id: 'learn', label: 'Learning Center', icon: <GraduationCap className="h-4 w-4" />, action: () => nav('/learn'), keywords: ['learn', 'tutorial', 'glossary', 'education'] },
+    { id: 'performance', label: 'Performance Attribution', icon: <BarChart3 className="h-4 w-4" />, action: () => nav('/performance'), keywords: ['performance', 'attribution', 'returns', 'drawdown', 'sharpe', 'benchmark'] },
+    { id: 'sentiment', label: 'Market Sentiment', icon: <Gauge className="h-4 w-4" />, action: () => nav('/sentiment'), keywords: ['sentiment', 'fear', 'greed', 'vix', 'put', 'call', 'mood'] },
+    { id: 'breadth', label: 'Market Breadth', icon: <Activity className="h-4 w-4" />, action: () => nav('/breadth'), keywords: ['breadth', 'advance', 'decline', 'sector', 'rotation', 'internals'] },
   ]
 
   const filtered = query.trim()

@@ -14,7 +14,7 @@ import { useTheme } from '@/contexts/ThemeContext'
 import {
   Search, Wifi, Sun, Moon, Monitor, LogOut, TrendingUp, Loader2,
   Users, Coins, Zap, GraduationCap, LayoutGrid, BookOpen, BarChart3,
-  Calendar, Puzzle, MoreHorizontal,
+  Calendar, Puzzle, MoreHorizontal, Gauge, Activity, LineChart,
 } from 'lucide-react'
 import { NotificationCenter } from './NotificationCenter'
 import { useNavigate, useLocation } from 'react-router-dom'
@@ -231,6 +231,16 @@ export function TopBar() {
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => navigate('/strategy')}>
               <Puzzle className="mr-2 h-3.5 w-3.5" /> Strategy Builder
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => navigate('/performance')}>
+              <LineChart className="mr-2 h-3.5 w-3.5" /> Performance
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/sentiment')}>
+              <Gauge className="mr-2 h-3.5 w-3.5" /> Sentiment
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/breadth')}>
+              <Activity className="mr-2 h-3.5 w-3.5" /> Market Breadth
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <div className="flex md:hidden flex-col">
