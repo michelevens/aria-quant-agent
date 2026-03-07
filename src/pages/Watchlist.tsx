@@ -43,7 +43,24 @@ export function Watchlist() {
     else { setSortKey(key); setSortAsc(true) }
   }
 
-  const sorted = [...watchlistQuotes].sort((a, b) => {
+  // Build rows for ALL watchlist symbols, using quote data when available
+  const quotesMap = new Map(watchlistQuotes.map((q) => [q.symbol, q]))
+  const allRows = watchlistSymbols.map((sym) => {
+    const q = quotesMap.get(sym)
+    return {
+      symbol: sym,
+      name: q?.name ?? '',
+      price: q?.price ?? 0,
+      change: q?.change ?? 0,
+      changePercent: q?.changePercent ?? 0,
+      volume: q?.volume ?? 0,
+      marketCap: q?.marketCap ?? 0,
+      pe: q?.pe ?? 0,
+      hasData: !!q,
+    }
+  })
+
+  const sorted = [...allRows].sort((a, b) => {
     const dir = sortAsc ? 1 : -1
     if (sortKey === 'symbol') return a.symbol.localeCompare(b.symbol) * dir
     return ((a[sortKey] ?? 0) - (b[sortKey] ?? 0)) * dir
@@ -100,24 +117,32 @@ export function Watchlist() {
                   <TableCell>
                     <div className="flex items-center gap-1.5">
                       <span className="text-sm font-medium">{item.symbol}</span>
-                      {item.change >= 0 ? (
-                        <TrendingUp className="h-3 w-3 text-emerald-500" />
-                      ) : (
-                        <TrendingDown className="h-3 w-3 text-red-500" />
-                      )}
+                      {item.hasData ? (
+                        item.change >= 0 ? (
+                          <TrendingUp className="h-3 w-3 text-emerald-500" />
+                        ) : (
+                          <TrendingDown className="h-3 w-3 text-red-500" />
+                        )
+                      ) : loading ? (
+                        <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+                      ) : null}
                     </div>
                   </TableCell>
-                  <TableCell className="max-w-40 truncate text-sm text-muted-foreground">{item.name}</TableCell>
-                  <TableCell><Sparkline symbol={item.symbol} /></TableCell>
-                  <TableCell className="text-right text-sm font-medium">${item.price.toFixed(2)}</TableCell>
+                  <TableCell className="max-w-40 truncate text-sm text-muted-foreground">
+                    {item.hasData ? item.name : (loading ? '' : 'No data')}
+                  </TableCell>
+                  <TableCell>{item.hasData && <Sparkline symbol={item.symbol} />}</TableCell>
+                  <TableCell className="text-right text-sm font-medium">
+                    {item.hasData ? `$${item.price.toFixed(2)}` : '—'}
+                  </TableCell>
                   <TableCell className={`text-right text-sm ${item.change >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
-                    {item.change >= 0 ? '+' : ''}{item.change.toFixed(2)}
+                    {item.hasData ? `${item.change >= 0 ? '+' : ''}${item.change.toFixed(2)}` : '—'}
                   </TableCell>
                   <TableCell className={`text-right text-sm font-medium ${item.changePercent >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
-                    {item.changePercent >= 0 ? '+' : ''}{item.changePercent.toFixed(2)}%
+                    {item.hasData ? `${item.changePercent >= 0 ? '+' : ''}${item.changePercent.toFixed(2)}%` : '—'}
                   </TableCell>
                   <TableCell className="text-right text-sm text-muted-foreground">
-                    {item.volume >= 1e6 ? `${(item.volume / 1e6).toFixed(1)}M` : item.volume.toLocaleString()}
+                    {item.hasData ? (item.volume >= 1e6 ? `${(item.volume / 1e6).toFixed(1)}M` : item.volume.toLocaleString()) : '—'}
                   </TableCell>
                   <TableCell className="text-right text-sm text-muted-foreground">
                     {item.marketCap > 0 ? formatNum(item.marketCap) : '—'}
@@ -132,7 +157,7 @@ export function Watchlist() {
                   </TableCell>
                 </TableRow>
               ))}
-              {watchlistQuotes.length === 0 && !loading && (
+              {watchlistSymbols.length === 0 && !loading && (
                 <TableRow>
                   <TableCell colSpan={10} className="py-8 text-center text-sm text-muted-foreground">
                     Add symbols to your watchlist to track them
