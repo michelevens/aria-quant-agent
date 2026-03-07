@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -17,23 +18,54 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Search, SlidersHorizontal } from 'lucide-react'
+import { fetchMultipleQuotes } from '@/services/marketData'
+import type { Quote } from '@/types/market'
+import { Search, Loader2, RefreshCw } from 'lucide-react'
 
-const screenerResults = [
-  { symbol: 'NVDA', name: 'NVIDIA Corp', price: 878.37, change: 2.14, pe: 72.3, mktCap: '2.16T', volume: '52.1M', sector: 'Technology' },
-  { symbol: 'SMCI', name: 'Super Micro Computer', price: 924.12, change: 8.42, pe: 45.8, mktCap: '54.2B', volume: '18.4M', sector: 'Technology' },
-  { symbol: 'ARM', name: 'Arm Holdings', price: 152.30, change: 3.21, pe: 312.5, mktCap: '159.8B', volume: '8.2M', sector: 'Technology' },
-  { symbol: 'AVGO', name: 'Broadcom Inc', price: 1342.80, change: 1.85, pe: 38.2, mktCap: '625.4B', volume: '4.8M', sector: 'Technology' },
-  { symbol: 'MRVL', name: 'Marvell Technology', price: 72.45, change: -1.23, pe: 62.1, mktCap: '62.8B', volume: '12.6M', sector: 'Technology' },
-  { symbol: 'AMD', name: 'AMD Inc', price: 164.28, change: 2.13, pe: 248.9, mktCap: '265.7B', volume: '42.8M', sector: 'Technology' },
-]
+const SCREENER_LISTS: Record<string, string[]> = {
+  'mega-tech': ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'NVDA', 'TSLA', 'AVGO', 'ORCL', 'CRM'],
+  'ai-plays': ['NVDA', 'AMD', 'SMCI', 'ARM', 'PLTR', 'SNOW', 'AI', 'PATH', 'DDOG', 'MDB'],
+  'fintech': ['SQ', 'PYPL', 'COIN', 'SOFI', 'HOOD', 'AFRM', 'NU', 'UPST', 'MARA', 'RIOT'],
+  'healthcare': ['UNH', 'JNJ', 'LLY', 'PFE', 'ABBV', 'MRK', 'TMO', 'ABT', 'DHR', 'BMY'],
+  'ev-energy': ['TSLA', 'RIVN', 'LCID', 'NIO', 'ENPH', 'FSLR', 'PLUG', 'CHPT', 'QS', 'BLNK'],
+  'value': ['BRK-B', 'JPM', 'BAC', 'WFC', 'GS', 'MS', 'C', 'AXP', 'V', 'MA'],
+}
+
+function formatMktCap(v: number): string {
+  if (v >= 1e12) return `${(v / 1e12).toFixed(2)}T`
+  if (v >= 1e9) return `${(v / 1e9).toFixed(1)}B`
+  if (v >= 1e6) return `${(v / 1e6).toFixed(0)}M`
+  return v.toLocaleString()
+}
 
 export function Screener() {
+  const [list, setList] = useState('mega-tech')
+  const [quotes, setQuotes] = useState<Quote[]>([])
+  const [loading, setLoading] = useState(true)
+  const [filter, setFilter] = useState('')
+
+  const load = (key: string) => {
+    setLoading(true)
+    fetchMultipleQuotes(SCREENER_LISTS[key] ?? [])
+      .then(setQuotes)
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }
+
+  useEffect(() => { load(list) }, [list])
+
+  const filtered = filter
+    ? quotes.filter((q) => q.symbol.includes(filter.toUpperCase()) || q.name.toLowerCase().includes(filter.toLowerCase()))
+    : quotes
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold">Stock Screener</h2>
-        <Badge variant="outline">{screenerResults.length} results</Badge>
+        <div className="flex items-center gap-2">
+          <Badge variant="outline">{filtered.length} results</Badge>
+          {loading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+        </div>
       </div>
 
       <Card>
@@ -41,34 +73,29 @@ export function Screener() {
           <div className="flex flex-wrap items-center gap-3">
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-              <Input placeholder="Filter symbols..." className="h-8 w-48 pl-8 text-sm" />
+              <Input
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                placeholder="Filter symbols..."
+                className="h-8 w-48 pl-8 text-sm"
+              />
             </div>
-            <Select defaultValue="all">
-              <SelectTrigger className="h-8 w-36 text-xs">
-                <SelectValue placeholder="Sector" />
+            <Select value={list} onValueChange={(v: string | null) => { if (v) setList(v) }}>
+              <SelectTrigger className="h-8 w-40 text-xs">
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Sectors</SelectItem>
-                <SelectItem value="tech">Technology</SelectItem>
-                <SelectItem value="health">Healthcare</SelectItem>
-                <SelectItem value="finance">Financials</SelectItem>
-                <SelectItem value="energy">Energy</SelectItem>
+                <SelectItem value="mega-tech">Mega Cap Tech</SelectItem>
+                <SelectItem value="ai-plays">AI / ML Plays</SelectItem>
+                <SelectItem value="fintech">Fintech</SelectItem>
+                <SelectItem value="healthcare">Healthcare</SelectItem>
+                <SelectItem value="ev-energy">EV / Clean Energy</SelectItem>
+                <SelectItem value="value">Value / Financials</SelectItem>
               </SelectContent>
             </Select>
-            <Select defaultValue="large">
-              <SelectTrigger className="h-8 w-36 text-xs">
-                <SelectValue placeholder="Market Cap" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="mega">Mega Cap (&gt;200B)</SelectItem>
-                <SelectItem value="large">Large Cap (&gt;10B)</SelectItem>
-                <SelectItem value="mid">Mid Cap (2-10B)</SelectItem>
-                <SelectItem value="small">Small Cap (&lt;2B)</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button variant="outline" size="sm" className="h-8 gap-1 text-xs">
-              <SlidersHorizontal className="h-3.5 w-3.5" />
-              More Filters
+            <Button variant="outline" size="sm" className="h-8 gap-1 text-xs" onClick={() => load(list)}>
+              <RefreshCw className="h-3.5 w-3.5" />
+              Refresh
             </Button>
           </div>
         </CardContent>
@@ -82,34 +109,51 @@ export function Screener() {
                 <TableHead className="text-xs">Symbol</TableHead>
                 <TableHead className="text-xs">Name</TableHead>
                 <TableHead className="text-right text-xs">Price</TableHead>
+                <TableHead className="text-right text-xs">Change</TableHead>
                 <TableHead className="text-right text-xs">% Change</TableHead>
-                <TableHead className="text-right text-xs">P/E</TableHead>
-                <TableHead className="text-right text-xs">Mkt Cap</TableHead>
                 <TableHead className="text-right text-xs">Volume</TableHead>
-                <TableHead className="text-xs">Sector</TableHead>
+                <TableHead className="text-right text-xs">Mkt Cap</TableHead>
+                <TableHead className="text-right text-xs">P/E</TableHead>
+                <TableHead className="text-right text-xs">52W High</TableHead>
+                <TableHead className="text-right text-xs">52W Low</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {screenerResults.map((s) => (
-                <TableRow key={s.symbol} className="cursor-pointer hover:bg-accent/50">
-                  <TableCell className="text-sm font-medium">{s.symbol}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{s.name}</TableCell>
-                  <TableCell className="text-right text-sm">${s.price.toFixed(2)}</TableCell>
+              {filtered.map((q) => (
+                <TableRow key={q.symbol} className="cursor-pointer hover:bg-accent/50">
+                  <TableCell className="text-sm font-medium">{q.symbol}</TableCell>
+                  <TableCell className="max-w-40 truncate text-sm text-muted-foreground">{q.name}</TableCell>
+                  <TableCell className="text-right text-sm font-medium">${q.price.toFixed(2)}</TableCell>
                   <TableCell
-                    className={`text-right text-sm font-medium ${
-                      s.change >= 0 ? 'text-emerald-500' : 'text-red-500'
-                    }`}
+                    className={`text-right text-sm ${q.change >= 0 ? 'text-emerald-500' : 'text-red-500'}`}
                   >
-                    {s.change >= 0 ? '+' : ''}{s.change.toFixed(2)}%
+                    {q.change >= 0 ? '+' : ''}{q.change.toFixed(2)}
                   </TableCell>
-                  <TableCell className="text-right text-sm">{s.pe}</TableCell>
-                  <TableCell className="text-right text-sm">{s.mktCap}</TableCell>
-                  <TableCell className="text-right text-sm text-muted-foreground">{s.volume}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="text-xs">{s.sector}</Badge>
+                  <TableCell
+                    className={`text-right text-sm font-medium ${q.changePercent >= 0 ? 'text-emerald-500' : 'text-red-500'}`}
+                  >
+                    {q.changePercent >= 0 ? '+' : ''}{q.changePercent.toFixed(2)}%
                   </TableCell>
+                  <TableCell className="text-right text-sm text-muted-foreground">
+                    {q.volume >= 1e6 ? `${(q.volume / 1e6).toFixed(1)}M` : q.volume.toLocaleString()}
+                  </TableCell>
+                  <TableCell className="text-right text-sm text-muted-foreground">
+                    {q.marketCap > 0 ? formatMktCap(q.marketCap) : '—'}
+                  </TableCell>
+                  <TableCell className="text-right text-sm text-muted-foreground">
+                    {q.pe > 0 ? q.pe.toFixed(1) : '—'}
+                  </TableCell>
+                  <TableCell className="text-right text-sm">${q.fiftyTwoWeekHigh.toFixed(2)}</TableCell>
+                  <TableCell className="text-right text-sm">${q.fiftyTwoWeekLow.toFixed(2)}</TableCell>
                 </TableRow>
               ))}
+              {filtered.length === 0 && !loading && (
+                <TableRow>
+                  <TableCell colSpan={10} className="py-8 text-center text-sm text-muted-foreground">
+                    No results found
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>

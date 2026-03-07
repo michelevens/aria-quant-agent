@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import { PortfolioProvider } from '@/contexts/PortfolioContext'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { Dashboard } from '@/pages/Dashboard'
 import { Trade } from '@/pages/Trade'
@@ -16,6 +17,7 @@ function App() {
   return (
     <BrowserRouter basename="/aria-quant-agent">
       <TooltipProvider>
+        <PortfolioProvider>
         <Routes>
           <Route element={<AppLayout />}>
             <Route index element={<Dashboard />} />
@@ -30,6 +32,7 @@ function App() {
             <Route path="settings" element={<Settings />} />
           </Route>
         </Routes>
+        </PortfolioProvider>
       </TooltipProvider>
     </BrowserRouter>
   )

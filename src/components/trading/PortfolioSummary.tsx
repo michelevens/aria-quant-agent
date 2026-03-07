@@ -1,50 +1,56 @@
 import { Card, CardContent } from '@/components/ui/card'
-import { POSITIONS } from '@/data/mockData'
-import { TrendingUp, TrendingDown, DollarSign, BarChart3, PieChart, Activity } from 'lucide-react'
+import { usePortfolioContext } from '@/contexts/PortfolioContext'
+import { TrendingUp, TrendingDown, DollarSign, BarChart3, PieChart, Activity, Loader2 } from 'lucide-react'
 
 export function PortfolioSummary() {
-  const totalValue = POSITIONS.reduce((sum, p) => sum + p.marketValue, 0)
-  const totalGain = POSITIONS.reduce((sum, p) => sum + p.totalGain, 0)
-  const totalCost = POSITIONS.reduce((sum, p) => sum + p.avgCost * p.quantity, 0)
-  const totalGainPct = (totalGain / totalCost) * 100
-  const todayChange = POSITIONS.reduce(
-    (sum, p) => sum + p.change * p.quantity,
-    0
-  )
-  const todayChangePct = (todayChange / (totalValue - todayChange)) * 100
+  const { totals, loading } = usePortfolioContext()
+
+  if (loading) {
+    return (
+      <div className="grid gap-3 md:grid-cols-3 lg:grid-cols-5">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Card key={i}>
+            <CardContent className="flex items-center justify-center py-6">
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    )
+  }
 
   const metrics = [
     {
       label: 'Portfolio Value',
-      value: `$${totalValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
+      value: `$${totals.totalValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
       icon: DollarSign,
-      subValue: null,
+      subValue: `${totals.positionCount} positions`,
     },
     {
       label: "Today's P&L",
-      value: `${todayChange >= 0 ? '+' : ''}$${todayChange.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
+      value: `${totals.dayChange >= 0 ? '+' : ''}$${Math.abs(totals.dayChange).toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
       icon: Activity,
-      subValue: `${todayChangePct >= 0 ? '+' : ''}${todayChangePct.toFixed(2)}%`,
-      positive: todayChange >= 0,
+      subValue: `${totals.dayChangePercent >= 0 ? '+' : ''}${totals.dayChangePercent.toFixed(2)}%`,
+      positive: totals.dayChange >= 0,
     },
     {
       label: 'Total Gain/Loss',
-      value: `${totalGain >= 0 ? '+' : ''}$${totalGain.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
-      icon: totalGain >= 0 ? TrendingUp : TrendingDown,
-      subValue: `${totalGainPct >= 0 ? '+' : ''}${totalGainPct.toFixed(2)}%`,
-      positive: totalGain >= 0,
+      value: `${totals.totalGain >= 0 ? '+' : ''}$${Math.abs(totals.totalGain).toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
+      icon: totals.totalGain >= 0 ? TrendingUp : TrendingDown,
+      subValue: `${totals.totalGainPercent >= 0 ? '+' : ''}${totals.totalGainPercent.toFixed(2)}%`,
+      positive: totals.totalGain >= 0,
     },
     {
-      label: 'Positions',
-      value: POSITIONS.length.toString(),
+      label: 'Win / Lose',
+      value: `${totals.winners} / ${totals.losers}`,
       icon: PieChart,
-      subValue: `${POSITIONS.filter((p) => p.totalGain >= 0).length} winning`,
+      subValue: `${totals.positionCount > 0 ? ((totals.winners / totals.positionCount) * 100).toFixed(0) : 0}% win rate`,
     },
     {
       label: 'Buying Power',
-      value: '$48,250.00',
+      value: `$${totals.cash.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
       icon: BarChart3,
-      subValue: 'Available',
+      subValue: 'Cash available',
     },
   ]
 

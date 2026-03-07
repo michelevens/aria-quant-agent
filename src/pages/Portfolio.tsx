@@ -1,7 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { PortfolioSummary } from '@/components/trading/PortfolioSummary'
 import { PositionsTable } from '@/components/trading/PositionsTable'
-import { POSITIONS } from '@/data/mockData'
+import { RiskMetrics } from '@/components/trading/RiskMetrics'
+import { CorrelationHeatmap } from '@/components/trading/CorrelationHeatmap'
+import { usePortfolioContext } from '@/contexts/PortfolioContext'
 import {
   PieChart,
   Pie,
@@ -23,9 +25,11 @@ const COLORS = [
 ]
 
 export function Portfolio() {
-  const allocationData = POSITIONS.map((p) => ({
-    name: p.symbol,
-    value: p.marketValue,
+  const { holdings } = usePortfolioContext()
+
+  const allocationData = holdings.map((h) => ({
+    name: h.symbol,
+    value: h.marketValue,
   }))
 
   return (
@@ -43,54 +47,59 @@ export function Portfolio() {
             </CardContent>
           </Card>
         </div>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Allocation</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div style={{ height: '300px' }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={allocationData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={100}
-                    paddingAngle={2}
-                    dataKey="value"
-                  >
-                    {allocationData.map((_, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={COLORS[index % COLORS.length]}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'hsl(0 0% 10%)',
-                      border: '1px solid hsl(0 0% 20%)',
-                      borderRadius: '6px',
-                      fontSize: '12px',
-                    }}
-                    formatter={(value) => [
-                      `$${Number(value).toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
-                      'Value',
-                    ]}
-                  />
-                  <Legend
-                    wrapperStyle={{ fontSize: '11px' }}
-                    formatter={(value: string) => (
-                      <span style={{ color: 'hsl(0 0% 70%)' }}>{value}</span>
-                    )}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="space-y-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">Allocation</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div style={{ height: '250px' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={allocationData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={55}
+                      outerRadius={90}
+                      paddingAngle={2}
+                      dataKey="value"
+                    >
+                      {allocationData.map((_, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={COLORS[index % COLORS.length]}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'hsl(0 0% 10%)',
+                        border: '1px solid hsl(0 0% 20%)',
+                        borderRadius: '6px',
+                        fontSize: '12px',
+                      }}
+                      formatter={(value) => [
+                        `$${Number(value).toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
+                        'Value',
+                      ]}
+                    />
+                    <Legend
+                      wrapperStyle={{ fontSize: '11px' }}
+                      formatter={(value: string) => (
+                        <span style={{ color: 'hsl(0 0% 70%)' }}>{value}</span>
+                      )}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+          <RiskMetrics />
+        </div>
       </div>
+
+      <CorrelationHeatmap />
     </div>
   )
 }
