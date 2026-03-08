@@ -4,7 +4,6 @@ import { Sidebar } from './Sidebar'
 import { TopBar } from '@/components/trading/TopBar'
 import { TickerBar } from '@/components/trading/TickerBar'
 import { DisclaimerBanner } from '@/components/DisclaimerBanner'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
 import { Menu, X } from 'lucide-react'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
@@ -48,11 +47,11 @@ export function AppLayout() {
         </div>
         <DisclaimerBanner />
         <TickerBar />
-        <ScrollArea className="flex-1">
+        <div className="min-h-0 flex-1 overflow-y-auto">
           <main className="p-4">
             <Outlet />
           </main>
-        </ScrollArea>
+        </div>
       </div>
     </div>
   )
