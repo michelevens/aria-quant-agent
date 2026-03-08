@@ -41,6 +41,10 @@ const SentimentDashboard = lazy(() => import('@/pages/SentimentDashboard').then(
 const MarketBreadth = lazy(() => import('@/pages/MarketBreadth').then((m) => ({ default: m.MarketBreadth })))
 const ForexCommodities = lazy(() => import('@/pages/ForexCommodities').then((m) => ({ default: m.ForexCommodities })))
 const DarkPoolMonitor = lazy(() => import('@/pages/DarkPoolMonitor').then((m) => ({ default: m.DarkPoolMonitor })))
+const CorrelationMatrix = lazy(() => import('@/pages/CorrelationMatrix').then((m) => ({ default: m.CorrelationMatrix })))
+const MonteCarloPage = lazy(() => import('@/pages/MonteCarlo').then((m) => ({ default: m.MonteCarlo })))
+const InsiderTrades = lazy(() => import('@/pages/InsiderTrades').then((m) => ({ default: m.InsiderTrades })))
+const EarningsCalendarPage = lazy(() => import('@/pages/EarningsCalendar').then((m) => ({ default: m.EarningsCalendar })))
 
 function PageLoader() {
   return (
@@ -91,6 +95,10 @@ function ProtectedRoutes() {
             <Route path="breadth" element={<MarketBreadth />} />
             <Route path="forex" element={<ForexCommodities />} />
             <Route path="darkpool" element={<DarkPoolMonitor />} />
+            <Route path="correlation" element={<CorrelationMatrix />} />
+            <Route path="monte-carlo" element={<MonteCarloPage />} />
+            <Route path="insiders" element={<InsiderTrades />} />
+            <Route path="earnings" element={<EarningsCalendarPage />} />
             <Route path="settings" element={<Settings />} />
           </Route>
         </Routes>

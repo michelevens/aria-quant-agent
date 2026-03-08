@@ -6,7 +6,7 @@ import {
   LayoutDashboard, TrendingUp, Briefcase, LineChart, Eye, ListOrdered,
   Search, Newspaper, Bot, Settings, FlaskConical, Bell, Shield, LayoutGrid,
   BookOpen, BarChart3, Calendar, Puzzle, Users, Coins, Zap, GraduationCap,
-  Gauge, Activity, Globe, Eye as EyeIcon,
+  Gauge, Activity, Globe, Eye as EyeIcon, Grid3X3, Dice5, UserCheck, CalendarDays,
 } from 'lucide-react'
 
 interface CommandItem {
@@ -57,6 +57,10 @@ export function CommandPalette() {
     { id: 'breadth', label: 'Market Breadth', icon: <Activity className="h-4 w-4" />, action: () => nav('/breadth'), keywords: ['breadth', 'advance', 'decline', 'sector', 'rotation', 'internals'] },
     { id: 'forex', label: 'Forex & Commodities', icon: <Globe className="h-4 w-4" />, action: () => nav('/forex'), keywords: ['forex', 'fx', 'currency', 'commodities', 'gold', 'oil', 'futures'] },
     { id: 'darkpool', label: 'Dark Pool Monitor', icon: <EyeIcon className="h-4 w-4" />, action: () => nav('/darkpool'), keywords: ['dark', 'pool', 'institutional', 'block', 'flow', 'otc'] },
+    { id: 'correlation', label: 'Correlation Matrix', icon: <Grid3X3 className="h-4 w-4" />, action: () => nav('/correlation'), keywords: ['correlation', 'matrix', 'heatmap', 'diversification', 'covariance'] },
+    { id: 'monte-carlo', label: 'Monte Carlo Simulator', icon: <Dice5 className="h-4 w-4" />, action: () => nav('/monte-carlo'), keywords: ['monte', 'carlo', 'simulation', 'stress', 'projection', 'probability'] },
+    { id: 'insiders', label: 'Insider Trades', icon: <UserCheck className="h-4 w-4" />, action: () => nav('/insiders'), keywords: ['insider', 'trades', 'buy', 'sell', 'sec', 'filing', 'executive'] },
+    { id: 'earnings', label: 'Earnings Calendar', icon: <CalendarDays className="h-4 w-4" />, action: () => nav('/earnings'), keywords: ['earnings', 'eps', 'revenue', 'surprise', 'report', 'quarter'] },
   ]
 
   const filtered = query.trim()
