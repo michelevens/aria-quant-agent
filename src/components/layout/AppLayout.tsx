@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { TopBar } from '@/components/trading/TopBar'
 import { TickerBar } from '@/components/trading/TickerBar'
+import { DisclaimerBanner } from '@/components/DisclaimerBanner'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
 import { Menu, X } from 'lucide-react'
@@ -45,6 +46,7 @@ export function AppLayout() {
             <TopBar />
           </div>
         </div>
+        <DisclaimerBanner />
         <TickerBar />
         <ScrollArea className="flex-1">
           <main className="p-4">

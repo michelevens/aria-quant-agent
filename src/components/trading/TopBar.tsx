@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import { NotificationCenter } from './NotificationCenter'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { isAlpacaConnected, getAlpacaConfig } from '@/services/alpaca'
 
 interface SearchResult {
   symbol: string
@@ -282,11 +283,26 @@ export function TopBar() {
         <div className="mx-1 h-5 w-px bg-border" />
 
         <div className="hidden items-center gap-1.5 text-xs sm:flex">
-          <Wifi className="h-3.5 w-3.5 text-emerald-500" />
-          <span className="text-muted-foreground">Market Open</span>
-          <Badge variant="outline" className="h-5 px-1.5 text-xs text-emerald-500">
-            LIVE
-          </Badge>
+          {isAlpacaConnected() ? (
+            <>
+              <Wifi className="h-3.5 w-3.5 text-emerald-500" />
+              <span className="text-muted-foreground">Alpaca</span>
+              <Badge variant="outline" className="h-5 px-1.5 text-xs" style={{
+                color: getAlpacaConfig()?.paper ? '#3b82f6' : '#10b981',
+                borderColor: getAlpacaConfig()?.paper ? '#3b82f6' : '#10b981',
+              }}>
+                {getAlpacaConfig()?.paper ? 'PAPER' : 'LIVE'}
+              </Badge>
+            </>
+          ) : (
+            <>
+              <Wifi className="h-3.5 w-3.5 text-muted-foreground" />
+              <span className="text-muted-foreground">Simulated</span>
+              <Badge variant="outline" className="h-5 px-1.5 text-xs text-muted-foreground">
+                DEMO
+              </Badge>
+            </>
+          )}
         </div>
 
         {/* Theme Toggle */}

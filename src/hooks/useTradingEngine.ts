@@ -1,4 +1,12 @@
 import { useState, useEffect, useCallback } from 'react'
+import {
+  isAlpacaConnected,
+  placeAlpacaOrder,
+  cancelAlpacaOrder,
+  fetchOrders as fetchAlpacaOrders,
+  type PlaceOrderParams,
+  type AlpacaOrder,
+} from '@/services/alpaca'
 
 export type OrderSide = 'BUY' | 'SELL'
 export type OrderType = 'MARKET' | 'LIMIT' | 'STOP' | 'STOP_LIMIT' | 'TRAILING_STOP' | 'OCO' | 'BRACKET'
@@ -58,10 +66,66 @@ function saveTradingState(state: TradingState) {
   localStorage.setItem(TRADING_KEY, JSON.stringify(state))
 }
 
+function alpacaStatusToLocal(status: string): OrderStatus {
+  if (status === 'filled') return 'FILLED'
+  if (status === 'partially_filled') return 'PARTIAL'
+  if (status === 'canceled' || status === 'expired' || status === 'rejected') return 'CANCELLED'
+  return 'OPEN'
+}
+
+function alpacaOrderToLocal(ao: AlpacaOrder): Order {
+  const typeMap: Record<string, OrderType> = {
+    market: 'MARKET', limit: 'LIMIT', stop: 'STOP',
+    stop_limit: 'STOP_LIMIT', trailing_stop: 'TRAILING_STOP',
+  }
+  const tifMap: Record<string, TimeInForce> = {
+    day: 'DAY', gtc: 'GTC', ioc: 'IOC', fok: 'FOK',
+  }
+  return {
+    id: ao.id,
+    symbol: ao.symbol,
+    side: ao.side.toUpperCase() as OrderSide,
+    type: typeMap[ao.type] ?? 'MARKET',
+    quantity: Number(ao.qty),
+    limitPrice: ao.limit_price ? Number(ao.limit_price) : undefined,
+    stopPrice: ao.stop_price ? Number(ao.stop_price) : undefined,
+    trailPercent: ao.trail_percent ? Number(ao.trail_percent) : undefined,
+    trailAmount: ao.trail_price ? Number(ao.trail_price) : undefined,
+    tif: tifMap[ao.time_in_force] ?? 'DAY',
+    status: alpacaStatusToLocal(ao.status),
+    filledQty: Number(ao.filled_qty),
+    filledPrice: ao.filled_avg_price ? Number(ao.filled_avg_price) : 0,
+    createdAt: new Date(ao.created_at).getTime(),
+    filledAt: ao.filled_at ? new Date(ao.filled_at).getTime() : undefined,
+  }
+}
+
 export function useTradingEngine() {
   const [state, setState] = useState<TradingState>(loadTradingState)
 
   useEffect(() => { saveTradingState(state) }, [state])
+
+  // Sync orders from Alpaca
+  const syncAlpacaOrders = useCallback(async () => {
+    if (!isAlpacaConnected()) return
+    try {
+      const alpacaOrders = await fetchAlpacaOrders('all', 100)
+      const localOrders = alpacaOrders.map(alpacaOrderToLocal)
+      const trades: TradeRecord[] = alpacaOrders
+        .filter((ao) => ao.status === 'filled' && ao.filled_avg_price)
+        .map((ao) => ({
+          id: `TRD-${ao.id}`,
+          orderId: ao.id,
+          symbol: ao.symbol,
+          side: ao.side.toUpperCase() as OrderSide,
+          quantity: Number(ao.filled_qty),
+          price: Number(ao.filled_avg_price),
+          total: Number(ao.filled_qty) * Number(ao.filled_avg_price),
+          timestamp: ao.filled_at ? new Date(ao.filled_at).getTime() : Date.now(),
+        }))
+      setState({ orders: localOrders, trades })
+    } catch { /* ignore sync errors */ }
+  }, [])
 
   const placeOrder = useCallback((params: {
     symbol: string
@@ -78,6 +142,48 @@ export function useTradingEngine() {
     currentPrice: number
   }): Order => {
     const { symbol, side, type, quantity, limitPrice, stopPrice, tif, currentPrice, trailAmount, trailPercent, bracketTakeProfit, bracketStopLoss } = params
+
+    // Route through Alpaca if connected
+    if (isAlpacaConnected()) {
+      const alpacaType = type === 'MARKET' ? 'market' : type === 'LIMIT' ? 'limit'
+        : type === 'STOP' ? 'stop' : type === 'STOP_LIMIT' ? 'stop_limit'
+        : type === 'TRAILING_STOP' ? 'trailing_stop' : 'market'
+      const alpacaTif = tif === 'DAY' ? 'day' : tif === 'GTC' ? 'gtc' : tif === 'IOC' ? 'ioc' : 'fok'
+
+      const orderParams: PlaceOrderParams = {
+        symbol,
+        qty: quantity,
+        side: side.toLowerCase() as 'buy' | 'sell',
+        type: alpacaType,
+        time_in_force: alpacaTif,
+      }
+
+      if (limitPrice !== undefined) orderParams.limit_price = limitPrice
+      if (stopPrice !== undefined) orderParams.stop_price = stopPrice
+      if (trailPercent !== undefined) orderParams.trail_percent = trailPercent
+      if (trailAmount !== undefined) orderParams.trail_price = trailAmount
+
+      if (type === 'BRACKET' && bracketTakeProfit && bracketStopLoss) {
+        orderParams.type = 'market'
+        orderParams.order_class = 'bracket'
+        orderParams.take_profit = { limit_price: bracketTakeProfit }
+        orderParams.stop_loss = { stop_price: bracketStopLoss }
+      }
+
+      // Fire and forget — async order placement, then sync
+      placeAlpacaOrder(orderParams)
+        .then(() => { syncAlpacaOrders() })
+        .catch((err) => { console.error('Alpaca order failed:', err) })
+
+      // Return an optimistic local order (will be replaced by sync)
+      const optimistic: Order = {
+        id: `ALPACA-PENDING-${Date.now()}`,
+        symbol, side, type, quantity, limitPrice, stopPrice, tif,
+        status: 'OPEN', filledQty: 0, filledPrice: 0, createdAt: Date.now(),
+      }
+      setState((prev) => ({ ...prev, orders: [optimistic, ...prev.orders] }))
+      return optimistic
+    }
 
     const order: Order = {
       id: `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`,
@@ -231,6 +337,12 @@ export function useTradingEngine() {
   }, [])
 
   const cancelOrder = useCallback((orderId: string) => {
+    // Cancel on Alpaca if connected and it's an Alpaca order (UUID format)
+    if (isAlpacaConnected() && !orderId.startsWith('ORD-')) {
+      cancelAlpacaOrder(orderId)
+        .then(() => { syncAlpacaOrders() })
+        .catch((err) => { console.error('Alpaca cancel failed:', err) })
+    }
     setState((prev) => ({
       ...prev,
       orders: prev.orders.map((o) =>
@@ -239,7 +351,7 @@ export function useTradingEngine() {
           : o
       ),
     }))
-  }, [])
+  }, [syncAlpacaOrders])
 
   const fillOpenOrders = useCallback((prices: Map<string, number>) => {
     setState((prev) => {
@@ -330,5 +442,6 @@ export function useTradingEngine() {
     cancelOrder,
     fillOpenOrders,
     clearHistory,
+    syncAlpacaOrders,
   }
 }
