@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import type { Quote } from '@/types/market'
 import { fetchMultipleQuotes } from '@/services/marketData'
+import { isAlpacaConnected, fetchAccount, fetchPositions } from '@/services/alpaca'
 
 export interface HoldingInput {
   symbol: string
@@ -67,9 +68,33 @@ export function usePortfolio() {
   const [quotes, setQuotes] = useState<Map<string, Quote>>(new Map())
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [alpacaSynced, setAlpacaSynced] = useState(false)
 
   // Persist state changes
   useEffect(() => { saveState(state) }, [state])
+
+  // Sync holdings and cash from Alpaca when connected
+  const syncAlpacaPortfolio = useCallback(async () => {
+    if (!isAlpacaConnected()) return
+    try {
+      const [account, positions] = await Promise.all([fetchAccount(), fetchPositions()])
+      const alpacaHoldings: HoldingInput[] = positions.map((p) => ({
+        symbol: p.symbol,
+        quantity: Math.abs(Number(p.qty)),
+        avgCost: Number(p.avg_entry_price),
+      }))
+      setState((prev) => ({
+        ...prev,
+        holdings: alpacaHoldings.length > 0 ? alpacaHoldings : prev.holdings,
+        cash: Number(account.cash),
+      }))
+      setAlpacaSynced(true)
+    } catch { /* ignore sync errors, fall back to local data */ }
+  }, [])
+
+  useEffect(() => {
+    syncAlpacaPortfolio()
+  }, [syncAlpacaPortfolio])
 
   // Fetch live quotes for all holdings
   const allSymbols = useMemo(() => {
@@ -207,7 +232,9 @@ export function usePortfolio() {
     totals,
     loading,
     error,
+    alpacaSynced,
     refreshQuotes,
+    syncAlpacaPortfolio,
     addHolding,
     removeHolding,
     addToWatchlist,

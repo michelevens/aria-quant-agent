@@ -14,6 +14,7 @@ import {
   FlaskConical,
   Bell,
   Shield,
+  Layers,
 } from 'lucide-react'
 
 const navItems = [
@@ -29,6 +30,7 @@ const navItems = [
   { to: '/backtest', icon: FlaskConical, label: 'Backtest' },
   { to: '/alerts', icon: Bell, label: 'Alerts' },
   { to: '/risk', icon: Shield, label: 'Risk' },
+  { to: '/options-chain', icon: Layers, label: 'Options Chain' },
 ]
 
 const bottomItems = [

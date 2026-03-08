@@ -15,7 +15,7 @@ import {
   Search, Wifi, Sun, Moon, Monitor, LogOut, TrendingUp, Loader2,
   Users, Coins, Zap, GraduationCap, LayoutGrid, BookOpen, BarChart3,
   Calendar, Puzzle, MoreHorizontal, Gauge, Activity, LineChart, Globe, Eye as EyeIcon,
-  Grid3X3, Dice5, UserCheck, CalendarDays,
+  Grid3X3, Dice5, UserCheck, CalendarDays, Layers,
 } from 'lucide-react'
 import { NotificationCenter } from './NotificationCenter'
 import { useNavigate, useLocation } from 'react-router-dom'
@@ -261,6 +261,9 @@ export function TopBar() {
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => navigate('/earnings')}>
               <CalendarDays className="mr-2 h-3.5 w-3.5" /> Earnings Calendar
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/options-chain')}>
+              <Layers className="mr-2 h-3.5 w-3.5" /> Options Chain
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <div className="flex md:hidden flex-col">

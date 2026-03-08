@@ -2,7 +2,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { PortfolioSummary } from '@/components/trading/PortfolioSummary'
 import { exportToCSV, importCSVFile } from '@/lib/csv'
-import { Download, Upload } from 'lucide-react'
+import { Download, Upload, RefreshCw } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { isAlpacaConnected } from '@/services/alpaca'
 import { toast } from 'sonner'
 import { PositionsTable } from '@/components/trading/PositionsTable'
 import { RiskMetrics } from '@/components/trading/RiskMetrics'
@@ -31,7 +33,8 @@ const COLORS = [
 ]
 
 export function Portfolio() {
-  const { holdings, addHolding } = usePortfolioContext()
+  const { holdings, addHolding, alpacaSynced, syncAlpacaPortfolio } = usePortfolioContext()
+  const alpacaLive = isAlpacaConnected()
 
   const handleImportCSV = async () => {
     const rows = await importCSVFile()
@@ -81,6 +84,20 @@ export function Portfolio() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <PortfolioSummary />
         <div className="flex items-center gap-2">
+          {alpacaLive && (
+            <>
+              <Badge variant="outline" className="h-5 px-1.5 text-xs" style={{
+                color: alpacaSynced ? '#10b981' : '#6b7280',
+                borderColor: alpacaSynced ? '#10b981' : '#6b7280',
+              }}>
+                {alpacaSynced ? 'LIVE' : 'LOCAL'}
+              </Badge>
+              <Button variant="outline" size="sm" className="gap-1 text-xs" onClick={() => syncAlpacaPortfolio()}>
+                <RefreshCw className="h-3.5 w-3.5" />
+                Sync
+              </Button>
+            </>
+          )}
           <Button variant="outline" size="sm" className="gap-1 text-xs" onClick={handleImportCSV}>
             <Upload className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Import</span> CSV

@@ -6,7 +6,7 @@ import {
   LayoutDashboard, TrendingUp, Briefcase, LineChart, Eye, ListOrdered,
   Search, Newspaper, Bot, Settings, FlaskConical, Bell, Shield, LayoutGrid,
   BookOpen, BarChart3, Calendar, Puzzle, Users, Coins, Zap, GraduationCap,
-  Gauge, Activity, Globe, Eye as EyeIcon, Grid3X3, Dice5, UserCheck, CalendarDays,
+  Gauge, Activity, Globe, Eye as EyeIcon, Grid3X3, Dice5, UserCheck, CalendarDays, Layers,
 } from 'lucide-react'
 
 interface CommandItem {
@@ -61,6 +61,7 @@ export function CommandPalette() {
     { id: 'monte-carlo', label: 'Monte Carlo Simulator', icon: <Dice5 className="h-4 w-4" />, action: () => nav('/monte-carlo'), keywords: ['monte', 'carlo', 'simulation', 'stress', 'projection', 'probability'] },
     { id: 'insiders', label: 'Insider Trades', icon: <UserCheck className="h-4 w-4" />, action: () => nav('/insiders'), keywords: ['insider', 'trades', 'buy', 'sell', 'sec', 'filing', 'executive'] },
     { id: 'earnings', label: 'Earnings Calendar', icon: <CalendarDays className="h-4 w-4" />, action: () => nav('/earnings'), keywords: ['earnings', 'eps', 'revenue', 'surprise', 'report', 'quarter'] },
+    { id: 'options-chain', label: 'Options Chain', icon: <Layers className="h-4 w-4" />, action: () => nav('/options-chain'), keywords: ['options', 'chain', 'greeks', 'delta', 'gamma', 'theta', 'vega', 'strike', 'calls', 'puts', 'expiration'] },
   ]
 
   const filtered = query.trim()

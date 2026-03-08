@@ -45,6 +45,7 @@ const CorrelationMatrix = lazy(() => import('@/pages/CorrelationMatrix').then((m
 const MonteCarloPage = lazy(() => import('@/pages/MonteCarlo').then((m) => ({ default: m.MonteCarlo })))
 const InsiderTrades = lazy(() => import('@/pages/InsiderTrades').then((m) => ({ default: m.InsiderTrades })))
 const EarningsCalendarPage = lazy(() => import('@/pages/EarningsCalendar').then((m) => ({ default: m.EarningsCalendar })))
+const OptionsChain = lazy(() => import('@/pages/OptionsChain').then((m) => ({ default: m.OptionsChain })))
 
 function PageLoader() {
   return (
@@ -99,6 +100,7 @@ function ProtectedRoutes() {
             <Route path="monte-carlo" element={<MonteCarloPage />} />
             <Route path="insiders" element={<InsiderTrades />} />
             <Route path="earnings" element={<EarningsCalendarPage />} />
+            <Route path="options-chain" element={<OptionsChain />} />
             <Route path="settings" element={<Settings />} />
           </Route>
         </Routes>
