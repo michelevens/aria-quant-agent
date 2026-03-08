@@ -105,54 +105,49 @@ export function Settings() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="space-y-4">
       <h2 className="text-lg font-bold">Settings</h2>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm">API Connections</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium">Yahoo Finance</p>
-              <p className="text-xs text-muted-foreground">Free market data provider — no key required</p>
-            </div>
-            <Badge className="bg-emerald-600 text-xs">Connected</Badge>
-          </div>
-          <Separator />
-
-          {/* Alpha Vantage */}
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium">Alpha Vantage</p>
-              <p className="text-xs text-muted-foreground">
-                Technical indicators, fundamentals & earnings
-              </p>
-            </div>
-            {avConnected ? (
+      <div className="grid gap-4 lg:grid-cols-2">
+        {/* API Connections — Left Column */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">API Connections</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium">Yahoo Finance</p>
+                <p className="text-xs text-muted-foreground">Free — no key required</p>
+              </div>
               <Badge className="bg-emerald-600 text-xs">Connected</Badge>
-            ) : (
-              <Badge variant="outline" className="text-xs">Not Connected</Badge>
-            )}
-          </div>
-          <div className="space-y-2">
-            <label className="text-xs text-muted-foreground">API Key</label>
+            </div>
+            <Separator />
+
+            {/* Alpha Vantage */}
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium">Alpha Vantage</p>
+              {avConnected ? (
+                <Badge className="bg-emerald-600 text-xs">Connected</Badge>
+              ) : (
+                <Badge variant="outline" className="text-xs">Not Connected</Badge>
+              )}
+            </div>
             <div className="flex gap-2">
               <Input
                 value={avKey}
                 onChange={(e) => setAvKey(e.target.value)}
                 placeholder="Enter your Alpha Vantage API key"
-                className="h-8 text-sm"
+                className="h-7 text-xs"
                 type={avConnected ? 'password' : 'text'}
                 onKeyDown={(e) => { if (e.key === 'Enter') handleConnectAV() }}
               />
               {avConnected ? (
-                <Button size="sm" variant="outline" className="h-8 text-xs text-red-500" onClick={handleDisconnectAV}>
+                <Button size="sm" variant="outline" className="h-7 text-xs text-red-500" onClick={handleDisconnectAV}>
                   Disconnect
                 </Button>
               ) : (
-                <Button size="sm" className="h-8 text-xs" onClick={handleConnectAV} disabled={avValidating || !avKey.trim()}>
+                <Button size="sm" className="h-7 text-xs" onClick={handleConnectAV} disabled={avValidating || !avKey.trim()}>
                   {avValidating ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Connect'}
                 </Button>
               )}
@@ -164,60 +159,42 @@ export function Settings() {
             )}
             {avSuccess && (
               <div className="flex items-center gap-1 text-xs text-emerald-500">
-                <CheckCircle2 className="h-3 w-3" />Alpha Vantage connected successfully!
+                <CheckCircle2 className="h-3 w-3" />Connected!
               </div>
             )}
             <p className="text-xs text-muted-foreground">
-              Free key: 25 requests/day.{' '}
+              Free: 25 req/day.{' '}
               <a href="https://www.alphavantage.co/support/#api-key" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 text-primary hover:underline">
-                Get a free key <ExternalLink className="h-2.5 w-2.5" />
+                Get key <ExternalLink className="h-2.5 w-2.5" />
               </a>
             </p>
-          </div>
 
-          {avConnected && (
-            <div className="rounded-md bg-emerald-500/10 px-3 py-2">
-              <p className="text-xs text-emerald-500 font-medium">Alpha Vantage features unlocked:</p>
-              <ul className="mt-1 space-y-0.5 text-xs text-muted-foreground">
-                <li>• Company fundamentals (P/E, EPS, margins, beta, sector)</li>
-                <li>• Earnings history with surprise tracking</li>
-                <li>• Alpha Vantage RSI, MACD, SMA indicators</li>
-                <li>• Analyst target prices</li>
-              </ul>
-            </div>
-          )}
+            <Separator />
 
-          <Separator />
-
-          {/* Finnhub */}
-          <div className="flex items-center justify-between">
-            <div>
+            {/* Finnhub */}
+            <div className="flex items-center justify-between">
               <p className="text-sm font-medium">Finnhub</p>
-              <p className="text-xs text-muted-foreground">Real-time quotes, company news & analyst recommendations</p>
+              {fhConnected ? (
+                <Badge className="bg-emerald-600 text-xs">Connected</Badge>
+              ) : (
+                <Badge variant="outline" className="text-xs">Not Connected</Badge>
+              )}
             </div>
-            {fhConnected ? (
-              <Badge className="bg-emerald-600 text-xs">Connected</Badge>
-            ) : (
-              <Badge variant="outline" className="text-xs">Not Connected</Badge>
-            )}
-          </div>
-          <div className="space-y-2">
-            <label className="text-xs text-muted-foreground">API Key</label>
             <div className="flex gap-2">
               <Input
                 value={fhKey}
                 onChange={(e) => setFhKey(e.target.value)}
                 placeholder="Enter your Finnhub API key"
-                className="h-8 text-sm"
+                className="h-7 text-xs"
                 type={fhConnected ? 'password' : 'text'}
                 onKeyDown={(e) => { if (e.key === 'Enter') handleConnectFH() }}
               />
               {fhConnected ? (
-                <Button size="sm" variant="outline" className="h-8 text-xs text-red-500" onClick={handleDisconnectFH}>
+                <Button size="sm" variant="outline" className="h-7 text-xs text-red-500" onClick={handleDisconnectFH}>
                   Disconnect
                 </Button>
               ) : (
-                <Button size="sm" className="h-8 text-xs" onClick={handleConnectFH} disabled={fhValidating || !fhKey.trim()}>
+                <Button size="sm" className="h-7 text-xs" onClick={handleConnectFH} disabled={fhValidating || !fhKey.trim()}>
                   {fhValidating ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Connect'}
                 </Button>
               )}
@@ -229,109 +206,100 @@ export function Settings() {
             )}
             {fhSuccess && (
               <div className="flex items-center gap-1 text-xs text-emerald-500">
-                <CheckCircle2 className="h-3 w-3" />Finnhub connected successfully!
+                <CheckCircle2 className="h-3 w-3" />Connected!
               </div>
             )}
             <p className="text-xs text-muted-foreground">
-              Free key: 60 calls/min.{' '}
+              Free: 60 calls/min.{' '}
               <a href="https://finnhub.io/register" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 text-primary hover:underline">
-                Get a free key <ExternalLink className="h-2.5 w-2.5" />
+                Get key <ExternalLink className="h-2.5 w-2.5" />
               </a>
             </p>
-          </div>
+          </CardContent>
+        </Card>
 
-          {fhConnected && (
-            <div className="rounded-md bg-emerald-500/10 px-3 py-2">
-              <p className="text-xs text-emerald-500 font-medium">Finnhub features unlocked:</p>
-              <ul className="mt-1 space-y-0.5 text-xs text-muted-foreground">
-                <li>• Real-time stock quotes</li>
-                <li>• Company profiles & industry data</li>
-                <li>• Analyst recommendations (buy/hold/sell)</li>
-                <li>• Company-specific news feed</li>
-              </ul>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm">Agent Configuration</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <label className="mb-1 block text-xs text-muted-foreground">Risk Tolerance</label>
-              <Select defaultValue="moderate">
-                <SelectTrigger className="h-8 text-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="conservative">Conservative</SelectItem>
-                  <SelectItem value="moderate">Moderate</SelectItem>
-                  <SelectItem value="aggressive">Aggressive</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <label className="mb-1 block text-xs text-muted-foreground">Max Position Size</label>
-              <Input defaultValue="10000" className="h-8 text-sm" type="number" />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs text-muted-foreground">Daily Loss Limit</label>
-              <Input defaultValue="2500" className="h-8 text-sm" type="number" />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs text-muted-foreground">Max Open Positions</label>
-              <Input defaultValue="10" className="h-8 text-sm" type="number" />
-            </div>
-          </div>
-          <Button size="sm" className="text-xs">Save Configuration</Button>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm">Appearance</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <label className="mb-1 block text-xs text-muted-foreground">Theme</label>
-            <Select value={theme} onValueChange={(v: string | null) => { if (v) setTheme(v as 'dark' | 'light' | 'system') }}>
-              <SelectTrigger className="h-8 w-48 text-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="dark">Dark</SelectItem>
-                <SelectItem value="light">Light</SelectItem>
-                <SelectItem value="system">System</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm">Keyboard Shortcuts</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 gap-2 text-xs md:grid-cols-3">
-            {[
-              ['1', 'Dashboard'], ['2', 'Trade'], ['3', 'Portfolio'],
-              ['4', 'Charts'], ['5', 'Watchlist'], ['6', 'Orders'],
-              ['7', 'Screener'], ['8', 'News'], ['9', 'AI Agent'],
-              ['0', 'Settings'], ['/', 'Focus Search'], ['Esc', 'Close/Blur'],
-              ['Ctrl+K', 'Command Palette'],
-            ].map(([key, desc]) => (
-              <div key={key} className="flex items-center gap-2">
-                <kbd className="rounded border border-border bg-accent px-1.5 py-0.5 font-mono text-xs">{key}</kbd>
-                <span className="text-muted-foreground">{desc}</span>
+        {/* Right Column — Agent Config + Appearance + Shortcuts */}
+        <div className="space-y-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">Agent Configuration</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid gap-3 grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs text-muted-foreground">Risk Tolerance</label>
+                  <Select defaultValue="moderate">
+                    <SelectTrigger className="h-7 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="conservative">Conservative</SelectItem>
+                      <SelectItem value="moderate">Moderate</SelectItem>
+                      <SelectItem value="aggressive">Aggressive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs text-muted-foreground">Max Position Size</label>
+                  <Input defaultValue="10000" className="h-7 text-xs" type="number" />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs text-muted-foreground">Daily Loss Limit</label>
+                  <Input defaultValue="2500" className="h-7 text-xs" type="number" />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs text-muted-foreground">Max Open Positions</label>
+                  <Input defaultValue="10" className="h-7 text-xs" type="number" />
+                </div>
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+              <Button size="sm" className="h-7 text-xs">Save Configuration</Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">Appearance</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-3">
+                <label className="text-xs text-muted-foreground">Theme</label>
+                <Select value={theme} onValueChange={(v: string | null) => { if (v) setTheme(v as 'dark' | 'light' | 'system') }}>
+                  <SelectTrigger className="h-7 w-36 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="dark">Dark</SelectItem>
+                    <SelectItem value="light">Light</SelectItem>
+                    <SelectItem value="system">System</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">Keyboard Shortcuts</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-1.5 text-xs">
+                {[
+                  ['1', 'Dashboard'], ['2', 'Trade'], ['3', 'Portfolio'],
+                  ['4', 'Charts'], ['5', 'Watchlist'], ['6', 'Orders'],
+                  ['7', 'Screener'], ['8', 'News'], ['9', 'AI Agent'],
+                  ['0', 'Settings'], ['/', 'Focus Search'], ['Esc', 'Close/Blur'],
+                  ['Ctrl+K', 'Command Palette'],
+                ].map(([key, desc]) => (
+                  <div key={key} className="flex items-center gap-1.5">
+                    <kbd className="rounded border border-border bg-accent px-1 py-0.5 font-mono text-xs">{key}</kbd>
+                    <span className="text-muted-foreground">{desc}</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   )
 }
