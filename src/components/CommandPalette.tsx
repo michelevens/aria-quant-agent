@@ -6,7 +6,7 @@ import {
   LayoutDashboard, TrendingUp, Briefcase, LineChart, Eye, ListOrdered,
   Search, Newspaper, Bot, Settings, FlaskConical, Bell, Shield, LayoutGrid,
   BookOpen, BarChart3, Calendar, Puzzle, Users, Coins, Zap, GraduationCap,
-  Gauge, Activity,
+  Gauge, Activity, Globe, Eye as EyeIcon,
 } from 'lucide-react'
 
 interface CommandItem {
@@ -55,6 +55,8 @@ export function CommandPalette() {
     { id: 'performance', label: 'Performance Attribution', icon: <BarChart3 className="h-4 w-4" />, action: () => nav('/performance'), keywords: ['performance', 'attribution', 'returns', 'drawdown', 'sharpe', 'benchmark'] },
     { id: 'sentiment', label: 'Market Sentiment', icon: <Gauge className="h-4 w-4" />, action: () => nav('/sentiment'), keywords: ['sentiment', 'fear', 'greed', 'vix', 'put', 'call', 'mood'] },
     { id: 'breadth', label: 'Market Breadth', icon: <Activity className="h-4 w-4" />, action: () => nav('/breadth'), keywords: ['breadth', 'advance', 'decline', 'sector', 'rotation', 'internals'] },
+    { id: 'forex', label: 'Forex & Commodities', icon: <Globe className="h-4 w-4" />, action: () => nav('/forex'), keywords: ['forex', 'fx', 'currency', 'commodities', 'gold', 'oil', 'futures'] },
+    { id: 'darkpool', label: 'Dark Pool Monitor', icon: <EyeIcon className="h-4 w-4" />, action: () => nav('/darkpool'), keywords: ['dark', 'pool', 'institutional', 'block', 'flow', 'otc'] },
   ]
 
   const filtered = query.trim()

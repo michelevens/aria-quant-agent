@@ -14,7 +14,7 @@ import { useTheme } from '@/contexts/ThemeContext'
 import {
   Search, Wifi, Sun, Moon, Monitor, LogOut, TrendingUp, Loader2,
   Users, Coins, Zap, GraduationCap, LayoutGrid, BookOpen, BarChart3,
-  Calendar, Puzzle, MoreHorizontal, Gauge, Activity, LineChart,
+  Calendar, Puzzle, MoreHorizontal, Gauge, Activity, LineChart, Globe, Eye as EyeIcon,
 } from 'lucide-react'
 import { NotificationCenter } from './NotificationCenter'
 import { useNavigate, useLocation } from 'react-router-dom'
@@ -241,6 +241,12 @@ export function TopBar() {
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => navigate('/breadth')}>
               <Activity className="mr-2 h-3.5 w-3.5" /> Market Breadth
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/forex')}>
+              <Globe className="mr-2 h-3.5 w-3.5" /> Forex & Commodities
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/darkpool')}>
+              <EyeIcon className="mr-2 h-3.5 w-3.5" /> Dark Pool Monitor
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <div className="flex md:hidden flex-col">

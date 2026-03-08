@@ -39,6 +39,8 @@ const LearnCenter = lazy(() => import('@/pages/LearnCenter').then((m) => ({ defa
 const PerformanceAttribution = lazy(() => import('@/pages/PerformanceAttribution').then((m) => ({ default: m.PerformanceAttribution })))
 const SentimentDashboard = lazy(() => import('@/pages/SentimentDashboard').then((m) => ({ default: m.SentimentDashboard })))
 const MarketBreadth = lazy(() => import('@/pages/MarketBreadth').then((m) => ({ default: m.MarketBreadth })))
+const ForexCommodities = lazy(() => import('@/pages/ForexCommodities').then((m) => ({ default: m.ForexCommodities })))
+const DarkPoolMonitor = lazy(() => import('@/pages/DarkPoolMonitor').then((m) => ({ default: m.DarkPoolMonitor })))
 
 function PageLoader() {
   return (
@@ -87,6 +89,8 @@ function ProtectedRoutes() {
             <Route path="performance" element={<PerformanceAttribution />} />
             <Route path="sentiment" element={<SentimentDashboard />} />
             <Route path="breadth" element={<MarketBreadth />} />
+            <Route path="forex" element={<ForexCommodities />} />
+            <Route path="darkpool" element={<DarkPoolMonitor />} />
             <Route path="settings" element={<Settings />} />
           </Route>
         </Routes>

@@ -4,7 +4,15 @@ import { usePortfolioContext } from '@/contexts/PortfolioContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Plus, X, LayoutGrid } from 'lucide-react'
+import { Plus, X, LayoutGrid, Columns2, Square, Rows2 } from 'lucide-react'
+
+type Layout = '2x2' | '1x2' | '2x1' | '1x1'
+const LAYOUTS: { id: Layout; icon: typeof LayoutGrid; cols: string }[] = [
+  { id: '1x1', icon: Square, cols: 'grid-cols-1' },
+  { id: '1x2', icon: Columns2, cols: 'grid-cols-1 lg:grid-cols-2' },
+  { id: '2x1', icon: Rows2, cols: 'grid-cols-1' },
+  { id: '2x2', icon: LayoutGrid, cols: 'grid-cols-1 lg:grid-cols-2' },
+]
 
 export function Charts() {
   const { holdings } = usePortfolioContext()
@@ -12,6 +20,7 @@ export function Charts() {
     holdings.slice(0, 4).map((h) => h.symbol)
   )
   const [newSymbol, setNewSymbol] = useState('')
+  const [layout, setLayout] = useState<Layout>('2x2')
 
   const addChart = () => {
     const sym = newSymbol.trim().toUpperCase()
@@ -36,6 +45,18 @@ export function Charts() {
           </Badge>
         </div>
         <div className="flex items-center gap-2">
+          <div className="hidden items-center gap-0.5 rounded-md border border-border p-0.5 sm:flex">
+            {LAYOUTS.map((l) => (
+              <button
+                key={l.id}
+                title={l.id}
+                onClick={() => setLayout(l.id)}
+                className={`flex h-7 w-7 items-center justify-center rounded transition-colors ${layout === l.id ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:bg-accent/50'}`}
+              >
+                <l.icon className="h-3.5 w-3.5" />
+              </button>
+            ))}
+          </div>
           <Input
             value={newSymbol}
             onChange={(e) => setNewSymbol(e.target.value.toUpperCase())}
@@ -94,7 +115,7 @@ export function Charts() {
         ))}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className={`grid gap-4 ${LAYOUTS.find((l) => l.id === layout)?.cols ?? 'grid-cols-1 lg:grid-cols-2'}`}>
         {chartSymbols.map((symbol) => (
           <div key={symbol} className="relative">
             <Button

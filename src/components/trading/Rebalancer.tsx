@@ -18,6 +18,9 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { usePortfolioContext } from '@/contexts/PortfolioContext'
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell, ReferenceLine,
+} from 'recharts'
 import { Scale, ArrowRight } from 'lucide-react'
 
 type Strategy = 'equal' | 'market-cap' | 'min-variance' | 'momentum'
@@ -170,6 +173,33 @@ export function Rebalancer() {
                 </TableBody>
               </Table>
             </div>
+
+            {/* Drift Chart */}
+            {actions.length > 0 && (
+              <div className="mt-4">
+                <p className="mb-2 text-xs font-medium text-muted-foreground">Weight Drift (Current vs Target)</p>
+                <ResponsiveContainer width="100%" height={180}>
+                  <BarChart data={actions.map((a) => ({
+                    symbol: a.symbol,
+                    drift: parseFloat((a.currentWeight - a.targetWeight).toFixed(1)),
+                  }))}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                    <XAxis dataKey="symbol" tick={{ fontSize: 10 }} />
+                    <YAxis tick={{ fontSize: 10 }} tickFormatter={(v: number) => `${v}%`} />
+                    <Tooltip
+                      contentStyle={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12 }}
+                      formatter={(v) => [`${Number(v).toFixed(1)}%`, 'Drift']}
+                    />
+                    <ReferenceLine y={0} stroke="var(--border)" />
+                    <Bar dataKey="drift" radius={[4, 4, 0, 0]}>
+                      {actions.map((a, i) => (
+                        <Cell key={i} fill={a.currentWeight > a.targetWeight ? '#ef4444' : '#10b981'} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
 
             <div className="mt-3 flex justify-end">
               <Button size="sm" className="text-xs" disabled>
