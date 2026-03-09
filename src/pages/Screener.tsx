@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -45,6 +46,7 @@ type SortKey = 'symbol' | 'price' | 'change' | 'changePercent' | 'volume' | 'mar
 type FilterMode = 'all' | 'gainers' | 'losers'
 
 export function Screener() {
+  const navigate = useNavigate()
   const [list, setList] = useState('mega-tech')
   const [quotes, setQuotes] = useState<Quote[]>([])
   const [loading, setLoading] = useState(true)
@@ -184,7 +186,7 @@ export function Screener() {
                 const pctInRange = range52 > 0 ? ((q.price - q.fiftyTwoWeekLow) / range52) * 100 : 50
 
                 return (
-                  <TableRow key={q.symbol} className="cursor-pointer hover:bg-accent/50">
+                  <TableRow key={q.symbol} className="cursor-pointer hover:bg-accent/50" onClick={() => navigate(`/quote?symbol=${q.symbol}`)}>
                     <TableCell>
                       <div className="flex items-center gap-1.5">
                         <span className="text-sm font-medium">{q.symbol}</span>

@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -79,6 +80,7 @@ type SortKey = 'symbol' | 'price' | 'change' | 'changePercent' | 'volume' | 'mar
 type FilterMode = 'all' | 'gainers' | 'losers'
 
 export function ETFScreener() {
+  const navigate = useNavigate()
   const [category, setCategory] = useState('broad-market')
   const [quotes, setQuotes] = useState<Quote[]>([])
   const [loading, setLoading] = useState(true)
@@ -283,7 +285,7 @@ export function ETFScreener() {
                 const pctInRange = range52 > 0 ? ((q.price - q.fiftyTwoWeekLow) / range52) * 100 : 50
 
                 return (
-                  <TableRow key={q.symbol} className="cursor-pointer hover:bg-accent/50">
+                  <TableRow key={q.symbol} className="cursor-pointer hover:bg-accent/50" onClick={() => navigate(`/quote?symbol=${q.symbol}`)}>
                     <TableCell>
                       <div className="flex items-center gap-1.5">
                         <span className="text-sm font-medium">{q.symbol}</span>

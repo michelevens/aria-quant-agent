@@ -47,6 +47,7 @@ const InsiderTrades = lazy(() => import('@/pages/InsiderTrades').then((m) => ({ 
 const EarningsCalendarPage = lazy(() => import('@/pages/EarningsCalendar').then((m) => ({ default: m.EarningsCalendar })))
 const OptionsChain = lazy(() => import('@/pages/OptionsChain').then((m) => ({ default: m.OptionsChain })))
 const ETFScreener = lazy(() => import('@/pages/ETFScreener').then((m) => ({ default: m.ETFScreener })))
+const QuoteDetail = lazy(() => import('@/pages/QuoteDetail').then((m) => ({ default: m.QuoteDetail })))
 
 function PageLoader() {
   return (
@@ -103,6 +104,7 @@ function ProtectedRoutes() {
             <Route path="earnings" element={<EarningsCalendarPage />} />
             <Route path="options-chain" element={<OptionsChain />} />
             <Route path="etf-screener" element={<ETFScreener />} />
+            <Route path="quote" element={<QuoteDetail />} />
             <Route path="settings" element={<Settings />} />
           </Route>
         </Routes>
