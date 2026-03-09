@@ -15,7 +15,7 @@ import {
   Search, Wifi, Sun, Moon, Monitor, LogOut, TrendingUp, Loader2,
   Users, Coins, Zap, GraduationCap, LayoutGrid, BookOpen, BarChart3,
   Calendar, Puzzle, MoreHorizontal, Gauge, Activity, LineChart, Globe, Eye as EyeIcon,
-  Grid3X3, Dice5, UserCheck, CalendarDays, Layers, ShoppingCart,
+  Grid3X3, Dice5, UserCheck, CalendarDays, Layers, ShoppingCart, SlidersHorizontal,
 } from 'lucide-react'
 import { NotificationCenter } from './NotificationCenter'
 import { useNavigate, useLocation } from 'react-router-dom'
@@ -274,6 +274,9 @@ export function TopBar() {
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => navigate('/marketplace')}>
               <ShoppingCart className="mr-2 h-3.5 w-3.5" /> Marketplace
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/advanced-screener')}>
+              <SlidersHorizontal className="mr-2 h-3.5 w-3.5" /> Pro Screener
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <div className="flex md:hidden flex-col">

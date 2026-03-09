@@ -17,6 +17,7 @@ import {
   Layers,
   Zap,
   ShoppingCart,
+  SlidersHorizontal,
 } from 'lucide-react'
 
 const navItems = [
@@ -36,6 +37,7 @@ const navItems = [
   { to: '/etf-screener', icon: Layers, label: 'ETF Screener' },
   { to: '/signals', icon: Zap, label: 'Signals' },
   { to: '/marketplace', icon: ShoppingCart, label: 'Marketplace' },
+  { to: '/advanced-screener', icon: SlidersHorizontal, label: 'Pro Screener' },
 ]
 
 const bottomItems = [
