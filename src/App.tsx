@@ -46,6 +46,7 @@ const MonteCarloPage = lazy(() => import('@/pages/MonteCarlo').then((m) => ({ de
 const InsiderTrades = lazy(() => import('@/pages/InsiderTrades').then((m) => ({ default: m.InsiderTrades })))
 const EarningsCalendarPage = lazy(() => import('@/pages/EarningsCalendar').then((m) => ({ default: m.EarningsCalendar })))
 const OptionsChain = lazy(() => import('@/pages/OptionsChain').then((m) => ({ default: m.OptionsChain })))
+const ETFScreener = lazy(() => import('@/pages/ETFScreener').then((m) => ({ default: m.ETFScreener })))
 
 function PageLoader() {
   return (
@@ -101,6 +102,7 @@ function ProtectedRoutes() {
             <Route path="insiders" element={<InsiderTrades />} />
             <Route path="earnings" element={<EarningsCalendarPage />} />
             <Route path="options-chain" element={<OptionsChain />} />
+            <Route path="etf-screener" element={<ETFScreener />} />
             <Route path="settings" element={<Settings />} />
           </Route>
         </Routes>

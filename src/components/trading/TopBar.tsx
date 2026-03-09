@@ -206,7 +206,7 @@ export function TopBar() {
 
       <div className="flex items-center gap-1.5">
         {/* Quick-access nav icons */}
-        <NavIcon to="/screener" icon={Layers} label="Screener" />
+        <NavIcon to="/etf-screener" icon={Layers} label="ETF Screener" />
         <div className="hidden items-center gap-0.5 md:flex">
           <NavIcon to="/crypto" icon={Coins} label="Crypto" />
           <NavIcon to="/options-flow" icon={Zap} label="Options Flow" />
@@ -265,6 +265,9 @@ export function TopBar() {
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => navigate('/options-chain')}>
               <Layers className="mr-2 h-3.5 w-3.5" /> Options Chain
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/etf-screener')}>
+              <Layers className="mr-2 h-3.5 w-3.5" /> ETF Screener
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <div className="flex md:hidden flex-col">

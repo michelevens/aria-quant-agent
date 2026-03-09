@@ -31,6 +31,7 @@ const navItems = [
   { to: '/alerts', icon: Bell, label: 'Alerts' },
   { to: '/risk', icon: Shield, label: 'Risk' },
   { to: '/options-chain', icon: Layers, label: 'Options Chain' },
+  { to: '/etf-screener', icon: Layers, label: 'ETF Screener' },
 ]
 
 const bottomItems = [
