@@ -424,7 +424,7 @@ export function Settings() {
               <div className="grid gap-3 grid-cols-2">
                 <div>
                   <label className="mb-1 block text-xs text-muted-foreground">Risk Tolerance</label>
-                  <Select value={agentConfig.riskTolerance} onValueChange={(v: string) => setAgentConfig(prev => ({ ...prev, riskTolerance: v ?? 'moderate' }))}>
+                  <Select value={agentConfig.riskTolerance} onValueChange={(v) => setAgentConfig(prev => ({ ...prev, riskTolerance: v ?? 'moderate' }))}>
                     <SelectTrigger className="h-7 text-xs">
                       <SelectValue />
                     </SelectTrigger>
