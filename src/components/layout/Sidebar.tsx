@@ -16,6 +16,7 @@ import {
   Shield,
   Layers,
   Zap,
+  ShoppingCart,
 } from 'lucide-react'
 
 const navItems = [
@@ -34,6 +35,7 @@ const navItems = [
   { to: '/options-chain', icon: Layers, label: 'Options Chain' },
   { to: '/etf-screener', icon: Layers, label: 'ETF Screener' },
   { to: '/signals', icon: Zap, label: 'Signals' },
+  { to: '/marketplace', icon: ShoppingCart, label: 'Marketplace' },
 ]
 
 const bottomItems = [

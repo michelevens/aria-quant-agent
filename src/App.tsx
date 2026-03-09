@@ -50,6 +50,7 @@ const OptionsChain = lazy(() => import('@/pages/OptionsChain').then((m) => ({ de
 const ETFScreener = lazy(() => import('@/pages/ETFScreener').then((m) => ({ default: m.ETFScreener })))
 const QuoteDetail = lazy(() => import('@/pages/QuoteDetail').then((m) => ({ default: m.QuoteDetail })))
 const SignalDashboard = lazy(() => import('@/pages/SignalDashboard').then((m) => ({ default: m.SignalDashboard })))
+const SignalMarketplace = lazy(() => import('@/pages/SignalMarketplace').then((m) => ({ default: m.SignalMarketplace })))
 
 function PageLoader() {
   return (
@@ -109,6 +110,7 @@ function ProtectedRoutes() {
             <Route path="etf-screener" element={<ETFScreener />} />
             <Route path="quote" element={<QuoteDetail />} />
             <Route path="signals" element={<SignalDashboard />} />
+            <Route path="marketplace" element={<SignalMarketplace />} />
             <Route path="settings" element={<Settings />} />
           </Route>
         </Routes>
