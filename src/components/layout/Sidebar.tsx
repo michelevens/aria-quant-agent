@@ -18,6 +18,7 @@ import {
   Zap,
   ShoppingCart,
   SlidersHorizontal,
+  Crown,
 } from 'lucide-react'
 
 const navItems = [
@@ -41,6 +42,7 @@ const navItems = [
 ]
 
 const bottomItems = [
+  { to: '/pricing', icon: Crown, label: 'Upgrade' },
   { to: '/settings', icon: Settings, label: 'Settings' },
 ]
 

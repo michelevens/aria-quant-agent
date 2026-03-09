@@ -52,6 +52,7 @@ const QuoteDetail = lazy(() => import('@/pages/QuoteDetail').then((m) => ({ defa
 const SignalDashboard = lazy(() => import('@/pages/SignalDashboard').then((m) => ({ default: m.SignalDashboard })))
 const SignalMarketplace = lazy(() => import('@/pages/SignalMarketplace').then((m) => ({ default: m.SignalMarketplace })))
 const AdvancedScreener = lazy(() => import('@/pages/AdvancedScreener').then((m) => ({ default: m.AdvancedScreener })))
+const Pricing = lazy(() => import('@/pages/Pricing').then((m) => ({ default: m.Pricing })))
 
 function PageLoader() {
   return (
@@ -113,6 +114,7 @@ function ProtectedRoutes() {
             <Route path="signals" element={<SignalDashboard />} />
             <Route path="marketplace" element={<SignalMarketplace />} />
             <Route path="advanced-screener" element={<AdvancedScreener />} />
+            <Route path="pricing" element={<Pricing />} />
             <Route path="settings" element={<Settings />} />
           </Route>
         </Routes>

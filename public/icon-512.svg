@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="80" fill="#0f172a"/>
+  <rect x="32" y="32" width="448" height="448" rx="64" fill="#1e293b"/>
+  <g transform="translate(256,240)">
+    <circle r="120" fill="#3b82f6" opacity="0.12"/>
+    <path d="M-52,52 L0,-72 L52,52 Z" fill="none" stroke="#3b82f6" stroke-width="8" stroke-linejoin="round"/>
+    <path d="M-72,20 L-20,20 L20,-20 L72,-20" fill="none" stroke="#60a5fa" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="0" cy="-72" r="10" fill="#60a5fa"/>
+    <circle cx="-52" cy="52" r="7" fill="#3b82f6"/>
+    <circle cx="52" cy="52" r="7" fill="#3b82f6"/>
+  </g>
+  <text x="256" y="410" text-anchor="middle" font-family="system-ui,sans-serif" font-size="48" font-weight="700" fill="#e2e8f0">ARIA QUANT</text>
+</svg>
