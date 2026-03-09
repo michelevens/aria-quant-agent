@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -90,6 +91,7 @@ function getFearGreedLabel(val: number): { label: string; color: string; icon: t
 }
 
 export function SentimentDashboard() {
+  const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [fearGreed, setFearGreed] = useState(62)
   const [vix, setVix] = useState(18.4)
@@ -279,7 +281,7 @@ export function SentimentDashboard() {
               <tbody>
                 {SOCIAL_SENTIMENT.map((s) => {
                   return (
-                    <tr key={s.symbol} className="border-b border-border last:border-0">
+                    <tr key={s.symbol} className="border-b border-border last:border-0 cursor-pointer hover:bg-accent/30" onClick={() => navigate(`/quote?symbol=${s.symbol}`)}>
                       <td className="px-4 py-2 font-semibold">{s.symbol}</td>
                       <td className="px-4 py-2">
                         <div className="flex h-2 overflow-hidden rounded-full">

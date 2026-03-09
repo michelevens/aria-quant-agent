@@ -4,12 +4,14 @@ import { Badge } from '@/components/ui/badge'
 import { SectorHeatMap } from '@/components/trading/SectorHeatMap'
 import { fetchMultipleQuotes } from '@/services/marketData'
 import type { Quote } from '@/types/market'
+import { useNavigate } from 'react-router-dom'
 import { LayoutGrid, TrendingUp, TrendingDown } from 'lucide-react'
 
 const INDEX_SYMBOLS = ['SPY', 'QQQ', 'DIA', 'IWM']
 const INDEX_LABELS: Record<string, string> = { SPY: 'S&P 500', QQQ: 'Nasdaq 100', DIA: 'Dow Jones', IWM: 'Russell 2000' }
 
 export function HeatMap() {
+  const navigate = useNavigate()
   const [indices, setIndices] = useState<Quote[]>([])
 
   useEffect(() => {
@@ -46,7 +48,7 @@ export function HeatMap() {
       {indices.length > 0 && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {indices.map((q) => (
-            <Card key={q.symbol}>
+            <Card key={q.symbol} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate(`/quote?symbol=${q.symbol}`)}>
               <CardContent className="flex items-center gap-3 p-4">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-accent">
                   {q.changePercent >= 0

@@ -7,6 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell,
 } from 'recharts'
+import { useNavigate } from 'react-router-dom'
 import {
   Eye, TrendingUp, TrendingDown, Search, RefreshCw, AlertTriangle, Zap,
   ArrowUpRight, ArrowDownRight,
@@ -110,6 +111,7 @@ function formatMoney(n: number): string {
 }
 
 export function DarkPoolMonitor() {
+  const navigate = useNavigate()
   const [prints, setPrints] = useState(() => generatePrints(200))
   const [filter, setFilter] = useState('')
   const [minSize, setMinSize] = useState(0)
@@ -236,7 +238,7 @@ export function DarkPoolMonitor() {
             </thead>
             <tbody className="divide-y divide-border">
               {blocks.map((b) => (
-                <tr key={b.symbol} className="hover:bg-accent/30">
+                <tr key={b.symbol} className="cursor-pointer hover:bg-accent/30" onClick={() => navigate(`/quote?symbol=${b.symbol}`)}>
                   <td className="px-3 py-2 font-bold">{b.symbol}</td>
                   <td className="px-3 py-2 text-right font-medium">{formatMoney(b.totalNotional)}</td>
                   <td className="px-3 py-2 text-right text-muted-foreground">{b.totalVolume.toLocaleString()}</td>
@@ -294,7 +296,7 @@ export function DarkPoolMonitor() {
               </thead>
               <tbody className="divide-y divide-border">
                 {filtered.slice(0, 100).map((p) => (
-                  <tr key={p.id} className="hover:bg-accent/30">
+                  <tr key={p.id} className="cursor-pointer hover:bg-accent/30" onClick={() => navigate(`/quote?symbol=${p.symbol}`)}>
                     <td className="px-3 py-1.5 text-muted-foreground">{p.time}</td>
                     <td className="px-3 py-1.5 font-bold">{p.symbol}</td>
                     <td className="px-3 py-1.5 text-right">${p.price.toFixed(2)}</td>

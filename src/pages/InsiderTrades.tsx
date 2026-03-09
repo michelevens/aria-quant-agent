@@ -9,6 +9,7 @@ import {
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell,
 } from 'recharts'
+import { useNavigate } from 'react-router-dom'
 import { UserCheck, TrendingUp, TrendingDown, DollarSign, Search, Filter } from 'lucide-react'
 
 function seededRandom(seed: number) {
@@ -86,6 +87,7 @@ function generateTrades(): InsiderTrade[] {
 type FilterType = 'all' | 'buy' | 'sell'
 
 export function InsiderTrades() {
+  const navigate = useNavigate()
   const [filter, setFilter] = useState<FilterType>('all')
   const [search, setSearch] = useState('')
 
@@ -261,7 +263,7 @@ export function InsiderTrades() {
             </TableHeader>
             <TableBody>
               {filtered.slice(0, 40).map((t) => (
-                <TableRow key={t.id}>
+                <TableRow key={t.id} className="cursor-pointer hover:bg-accent/50" onClick={() => navigate(`/quote?symbol=${t.symbol}`)}>
                   <TableCell className="text-xs text-muted-foreground">{t.date}</TableCell>
                   <TableCell className="text-sm font-medium">{t.symbol}</TableCell>
                   <TableCell className="text-sm">{t.insider}</TableCell>

@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -121,6 +122,7 @@ function formatPremium(v: number): string {
 }
 
 export function OptionsFlow() {
+  const navigate = useNavigate()
   const flows = useMemo(generateFlows, [])
   const [search, setSearch] = useState('')
   const [sortKey, setSortKey] = useState<SortKey>('premium')
@@ -307,7 +309,7 @@ export function OptionsFlow() {
             </TableHeader>
             <TableBody>
               {filtered.slice(0, 40).map((f) => (
-                <TableRow key={f.id} className="hover:bg-accent/50">
+                <TableRow key={f.id} className="cursor-pointer hover:bg-accent/50" onClick={() => navigate(`/quote?symbol=${f.symbol}`)}>
                   <TableCell className="text-xs text-muted-foreground">{f.time}</TableCell>
                   <TableCell>
                     <span className="text-sm font-medium">{f.symbol}</span>
@@ -343,7 +345,7 @@ export function OptionsFlow() {
                   <TableCell className="hidden text-right text-sm text-muted-foreground lg:table-cell">{f.iv.toFixed(1)}%</TableCell>
                   <TableCell className="hidden text-right text-sm text-muted-foreground lg:table-cell">{f.delta.toFixed(2)}</TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="icon" className="h-6 w-6" title="View details">
+                    <Button variant="ghost" size="icon" className="h-6 w-6" title="View details" onClick={(e) => { e.stopPropagation(); navigate(`/quote?symbol=${f.symbol}`) }}>
                       <Eye className="h-3 w-3" />
                     </Button>
                   </TableCell>

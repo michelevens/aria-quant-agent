@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -79,6 +80,7 @@ const riskColor = (risk: string) => {
 }
 
 export function SocialTrading() {
+  const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [sortKey, setSortKey] = useState<SortKey>('rank')
   const [sortAsc, setSortAsc] = useState(true)
@@ -273,7 +275,7 @@ export function SocialTrading() {
                         </div>
                         <div className="flex gap-1">
                           {t.topHoldings.slice(0, 2).map((h) => (
-                            <span key={h} className="text-xs text-muted-foreground">{h}</span>
+                            <span key={h} className="cursor-pointer text-xs text-muted-foreground hover:text-foreground" onClick={(e) => { e.stopPropagation(); navigate(`/quote?symbol=${h}`) }}>{h}</span>
                           ))}
                         </div>
                       </div>
@@ -386,7 +388,7 @@ export function SocialTrading() {
               </div>
               <div className="mb-4 flex gap-1">
                 {t.topHoldings.map((h) => (
-                  <Badge key={h} variant="outline" className="text-xs">{h}</Badge>
+                  <Badge key={h} variant="outline" className="cursor-pointer text-xs hover:bg-accent" onClick={(e) => { e.stopPropagation(); navigate(`/quote?symbol=${h}`) }}>{h}</Badge>
                 ))}
               </div>
               <div className="flex gap-2">

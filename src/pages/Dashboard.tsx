@@ -16,6 +16,7 @@ import type { Quote } from '@/types/market'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts'
+import { useNavigate } from 'react-router-dom'
 import {
   TrendingUp, TrendingDown, Clock, Gauge, Activity, Globe,
 } from 'lucide-react'
@@ -49,6 +50,7 @@ function getVixLabel(v: number) {
 }
 
 export function Dashboard() {
+  const navigate = useNavigate()
   const { holdings, totals } = usePortfolioContext()
   const { trades } = useTradingContext()
   const [sectors, setSectors] = useState<Quote[]>([])
@@ -164,7 +166,7 @@ export function Dashboard() {
           </CardHeader>
           <CardContent className="space-y-2">
             {topMovers.map((h) => (
-              <div key={h.symbol} className="flex items-center justify-between">
+              <div key={h.symbol} className="flex items-center justify-between cursor-pointer hover:bg-accent/30 rounded-md px-2 py-1 -mx-2" onClick={() => navigate(`/quote?symbol=${h.symbol}`)}>
                 <div className="flex items-center gap-3">
                   <Sparkline symbol={h.symbol} width={60} height={22} />
                   <div>

@@ -6,6 +6,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { useNavigate } from 'react-router-dom'
 import { usePortfolioContext } from '@/contexts/PortfolioContext'
 import { Loader2 } from 'lucide-react'
 
@@ -17,6 +18,7 @@ function formatVolume(v: number): string {
 }
 
 export function PositionsTable() {
+  const navigate = useNavigate()
   const { holdings, loading } = usePortfolioContext()
 
   if (loading) {
@@ -45,7 +47,7 @@ export function PositionsTable() {
         </TableHeader>
         <TableBody>
           {holdings.map((p) => (
-            <TableRow key={p.symbol} className="cursor-pointer hover:bg-accent/50">
+            <TableRow key={p.symbol} className="cursor-pointer hover:bg-accent/50" onClick={() => navigate(`/quote?symbol=${p.symbol}`)}>
               <TableCell>
                 <div>
                   <span className="text-sm font-medium">{p.symbol}</span>

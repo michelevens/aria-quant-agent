@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -53,6 +54,7 @@ function timeAgo(ts: number): string {
 }
 
 export function News() {
+  const navigate = useNavigate()
   const { holdings } = usePortfolioContext()
   const [category, setCategory] = useState<Category>('portfolio')
   const [news, setNews] = useState<NewsItem[]>([])
@@ -178,7 +180,7 @@ export function News() {
                             {sentiment.label}
                           </Badge>
                           {item.relatedSymbols.slice(0, 3).map((s) => (
-                            <Badge key={s} variant="outline" className="h-4 px-1 text-xs">{s}</Badge>
+                            <Badge key={s} variant="outline" className="h-4 cursor-pointer px-1 text-xs hover:bg-accent" onClick={(e) => { e.stopPropagation(); navigate(`/quote?symbol=${s}`) }}>{s}</Badge>
                           ))}
                         </div>
                       </div>
@@ -207,7 +209,7 @@ export function News() {
                   <span>{selectedArticle.source}</span>
                   {selectedArticle.publishedAt > 0 && <span>{timeAgo(selectedArticle.publishedAt)}</span>}
                   {selectedArticle.relatedSymbols.slice(0, 3).map((s) => (
-                    <Badge key={s} variant="outline" className="h-4 px-1 text-xs">{s}</Badge>
+                    <Badge key={s} variant="outline" className="h-4 cursor-pointer px-1 text-xs hover:bg-accent" onClick={(e) => { e.stopPropagation(); navigate(`/quote?symbol=${s}`) }}>{s}</Badge>
                   ))}
                 </div>
               </div>
@@ -250,7 +252,7 @@ export function News() {
                       <p className="text-xs text-muted-foreground mb-1.5">Related symbols</p>
                       <div className="flex flex-wrap gap-1.5">
                         {selectedArticle.relatedSymbols.map((s) => (
-                          <Badge key={s} variant="outline" className="text-xs">{s}</Badge>
+                          <Badge key={s} variant="outline" className="cursor-pointer text-xs hover:bg-accent" onClick={() => navigate(`/quote?symbol=${s}`)}>{s}</Badge>
                         ))}
                       </div>
                     </div>

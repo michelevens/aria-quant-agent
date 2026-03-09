@@ -207,7 +207,7 @@ export function SignalDashboard() {
                       <TableRow
                         key={row.symbol}
                         className={`cursor-pointer hover:bg-accent/50 ${selectedSignal?.symbol === row.symbol ? 'bg-accent/30' : ''}`}
-                        onClick={() => setSelectedSignal(row)}
+                        onClick={() => { setSelectedSignal(row); navigate(`/quote?symbol=${row.symbol}`) }}
                       >
                         <TableCell>
                           <span className="text-sm font-medium">{row.symbol}</span>

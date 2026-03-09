@@ -126,16 +126,16 @@ function ConditionRow({
       <select
         value={condition.indicator}
         onChange={(e) => onChange({ ...condition, indicator: e.target.value as Indicator })}
-        className="h-8 rounded-md border border-border bg-transparent px-2 text-sm"
+        className="h-8 rounded-md border border-border bg-card text-foreground px-2 text-sm"
       >
-        {INDICATORS.map((ind) => <option key={ind} value={ind}>{ind}</option>)}
+        {INDICATORS.map((ind) => <option key={ind} value={ind} className="bg-card text-foreground">{ind}</option>)}
       </select>
       <select
         value={condition.operator}
         onChange={(e) => onChange({ ...condition, operator: e.target.value as Operator })}
-        className="h-8 rounded-md border border-border bg-transparent px-2 text-sm"
+        className="h-8 rounded-md border border-border bg-card text-foreground px-2 text-sm"
       >
-        {OPERATORS.map((op) => <option key={op.value} value={op.value}>{op.label}</option>)}
+        {OPERATORS.map((op) => <option key={op.value} value={op.value} className="bg-card text-foreground">{op.label}</option>)}
       </select>
       <Input
         value={condition.value}

@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -55,6 +56,7 @@ const INDEX_LABELS: Record<string, string> = {
 type Tab = 'forex' | 'commodities' | 'futures'
 
 export function ForexCommodities() {
+  const navigate = useNavigate()
   const [tab, setTab] = useState<Tab>('forex')
   const [loading, setLoading] = useState(true)
   const [fxQuotes, setFxQuotes] = useState<Quote[]>([])
@@ -141,11 +143,11 @@ export function ForexCommodities() {
           {sortedFx.map((q) => {
             const info = FX_LABELS[q.symbol]
             return (
-              <Card key={q.symbol} className="transition-all hover:shadow-md">
+              <Card key={q.symbol} className="cursor-pointer transition-all hover:shadow-md" onClick={() => navigate(`/quote?symbol=${q.symbol}`)}>
                 <CardContent className="py-3 px-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <button onClick={() => toggleFav(q.symbol)} className="transition-transform hover:scale-110">
+                      <button onClick={(e) => { e.stopPropagation(); toggleFav(q.symbol) }} className="transition-transform hover:scale-110">
                         <Star className={`h-4 w-4 ${favorites.has(q.symbol) ? 'fill-yellow-500 text-yellow-500' : 'text-muted-foreground'}`} />
                       </button>
                       <div>
@@ -191,11 +193,11 @@ export function ForexCommodities() {
               : Wheat
             const Icon = icon
             return (
-              <Card key={q.symbol} className="transition-all hover:shadow-md">
+              <Card key={q.symbol} className="cursor-pointer transition-all hover:shadow-md" onClick={() => navigate(`/quote?symbol=${q.symbol}`)}>
                 <CardContent className="py-3 px-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <button onClick={() => toggleFav(q.symbol)} className="transition-transform hover:scale-110">
+                      <button onClick={(e) => { e.stopPropagation(); toggleFav(q.symbol) }} className="transition-transform hover:scale-110">
                         <Star className={`h-4 w-4 ${favorites.has(q.symbol) ? 'fill-yellow-500 text-yellow-500' : 'text-muted-foreground'}`} />
                       </button>
                       <div className="flex h-8 w-8 items-center justify-center rounded-md bg-accent">
@@ -240,7 +242,7 @@ export function ForexCommodities() {
           {liveIndices.map((q) => {
             const name = INDEX_LABELS[q.symbol] ?? q.symbol
             return (
-              <Card key={q.symbol} className="transition-all hover:shadow-md">
+              <Card key={q.symbol} className="cursor-pointer transition-all hover:shadow-md" onClick={() => navigate(`/quote?symbol=${q.symbol}`)}>
                 <CardContent className="py-4 px-4">
                   <div className="flex items-center justify-between">
                     <div>

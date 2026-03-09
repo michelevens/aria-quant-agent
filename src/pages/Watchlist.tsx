@@ -11,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { useNavigate } from 'react-router-dom'
 import { usePortfolioContext } from '@/contexts/PortfolioContext'
 import { Sparkline } from '@/components/trading/Sparkline'
 import { TrendingUp, TrendingDown, Plus, X, Loader2, ArrowUpDown } from 'lucide-react'
@@ -25,6 +26,7 @@ function formatNum(v: number): string {
 type SortKey = 'symbol' | 'price' | 'change' | 'changePercent' | 'volume' | 'marketCap'
 
 export function Watchlist() {
+  const navigate = useNavigate()
   const { watchlistQuotes, watchlistSymbols, addToWatchlist, removeFromWatchlist, loading } = usePortfolioContext()
   const [newSymbol, setNewSymbol] = useState('')
   const [sortKey, setSortKey] = useState<SortKey>('symbol')
@@ -113,7 +115,7 @@ export function Watchlist() {
             </TableHeader>
             <TableBody>
               {sorted.map((item) => (
-                <TableRow key={item.symbol} className="hover:bg-accent/50">
+                <TableRow key={item.symbol} className="cursor-pointer hover:bg-accent/50" onClick={() => navigate(`/quote?symbol=${item.symbol}`)}>
                   <TableCell>
                     <div className="flex items-center gap-1.5">
                       <span className="text-sm font-medium">{item.symbol}</span>

@@ -10,6 +10,7 @@ import {
   TrendingUp, TrendingDown, Search, ArrowUpDown, Star, Loader2,
   Coins, DollarSign, Activity, Flame, Zap,
 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { fetchMultipleQuotes } from '@/services/marketData'
 import type { Quote } from '@/types/market'
 
@@ -69,6 +70,7 @@ function formatVolume(v: number): string {
 }
 
 export function CryptoDashboard() {
+  const navigate = useNavigate()
   const [quotes, setQuotes] = useState<Quote[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -300,7 +302,7 @@ export function CryptoDashboard() {
             </TableHeader>
             <TableBody>
               {filtered.map((r) => (
-                <TableRow key={r.symbol} className="hover:bg-accent/50">
+                <TableRow key={r.symbol} className="cursor-pointer hover:bg-accent/50" onClick={() => navigate(`/quote?symbol=${r.symbol}`)}>
                   <TableCell>
                     <button onClick={() => toggleFav(r.symbol)}>
                       <Star
