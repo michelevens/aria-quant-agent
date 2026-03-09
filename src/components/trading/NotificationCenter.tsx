@@ -75,6 +75,17 @@ export function NotificationCenter() {
     saveNotifications(notifications)
   }, [notifications])
 
+  // Subscribe to notification bus for real-time alert notifications
+  useEffect(() => {
+    let unsub: (() => void) | undefined
+    import('@/engine/notificationBus').then(({ notificationBus }) => {
+      unsub = notificationBus.subscribe((notif) => {
+        setNotifications((prev) => [notif, ...prev].slice(0, 50))
+      })
+    })
+    return () => unsub?.()
+  }, [])
+
   const unreadCount = notifications.filter((n) => !n.read).length
 
   const markAllRead = useCallback(() => {

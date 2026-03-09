@@ -269,6 +269,9 @@ export function TopBar() {
             <DropdownMenuItem onClick={() => navigate('/etf-screener')}>
               <Layers className="mr-2 h-3.5 w-3.5" /> ETF Screener
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/signals')}>
+              <Zap className="mr-2 h-3.5 w-3.5" /> Signals
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <div className="flex md:hidden flex-col">
               <DropdownMenuItem onClick={() => navigate('/crypto')}>

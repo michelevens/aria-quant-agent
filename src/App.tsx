@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { PortfolioProvider } from '@/contexts/PortfolioContext'
+import { AlertProvider } from '@/contexts/AlertContext'
 import { TradingProvider } from '@/contexts/TradingContext'
 import { AuthProvider, useAuth } from '@/contexts/AuthContext'
 import { ThemeProvider } from '@/contexts/ThemeContext'
@@ -48,6 +49,7 @@ const EarningsCalendarPage = lazy(() => import('@/pages/EarningsCalendar').then(
 const OptionsChain = lazy(() => import('@/pages/OptionsChain').then((m) => ({ default: m.OptionsChain })))
 const ETFScreener = lazy(() => import('@/pages/ETFScreener').then((m) => ({ default: m.ETFScreener })))
 const QuoteDetail = lazy(() => import('@/pages/QuoteDetail').then((m) => ({ default: m.QuoteDetail })))
+const SignalDashboard = lazy(() => import('@/pages/SignalDashboard').then((m) => ({ default: m.SignalDashboard })))
 
 function PageLoader() {
   return (
@@ -66,6 +68,7 @@ function ProtectedRoutes() {
 
   return (
     <PortfolioProvider>
+      <AlertProvider>
       <TradingProvider>
       <CommandPalette />
       <Suspense fallback={<PageLoader />}>
@@ -105,11 +108,13 @@ function ProtectedRoutes() {
             <Route path="options-chain" element={<OptionsChain />} />
             <Route path="etf-screener" element={<ETFScreener />} />
             <Route path="quote" element={<QuoteDetail />} />
+            <Route path="signals" element={<SignalDashboard />} />
             <Route path="settings" element={<Settings />} />
           </Route>
         </Routes>
       </Suspense>
       </TradingProvider>
+      </AlertProvider>
     </PortfolioProvider>
   )
 }

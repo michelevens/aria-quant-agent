@@ -15,6 +15,7 @@ import {
   Bell,
   Shield,
   Layers,
+  Zap,
 } from 'lucide-react'
 
 const navItems = [
@@ -32,6 +33,7 @@ const navItems = [
   { to: '/risk', icon: Shield, label: 'Risk' },
   { to: '/options-chain', icon: Layers, label: 'Options Chain' },
   { to: '/etf-screener', icon: Layers, label: 'ETF Screener' },
+  { to: '/signals', icon: Zap, label: 'Signals' },
 ]
 
 const bottomItems = [
