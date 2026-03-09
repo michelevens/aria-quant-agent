@@ -35,9 +35,39 @@ import {
   type AlpacaAccount,
 } from '@/services/alpaca'
 import { CheckCircle2, Loader2, XCircle, ExternalLink } from 'lucide-react'
+import { toast } from 'sonner'
+
+interface AgentConfig {
+  riskTolerance: string
+  maxPositionSize: string
+  dailyLossLimit: string
+  maxOpenPositions: string
+}
+
+const AGENT_CONFIG_KEY = 'aria-agent-config'
+
+function loadAgentConfig(): AgentConfig {
+  try {
+    const raw = localStorage.getItem(AGENT_CONFIG_KEY)
+    if (raw) return JSON.parse(raw)
+  } catch { /* ignore */ }
+  return { riskTolerance: 'moderate', maxPositionSize: '10000', dailyLossLimit: '2500', maxOpenPositions: '10' }
+}
+
+function saveAgentConfig(config: AgentConfig) {
+  localStorage.setItem(AGENT_CONFIG_KEY, JSON.stringify(config))
+}
 
 export function Settings() {
   const { theme, setTheme } = useTheme()
+
+  // Agent Configuration
+  const [agentConfig, setAgentConfig] = useState<AgentConfig>(loadAgentConfig)
+
+  const handleSaveAgentConfig = () => {
+    saveAgentConfig(agentConfig)
+    toast.success('Agent configuration saved')
+  }
 
   // Alpha Vantage
   const [avKey, setAvKey] = useState('')
@@ -394,7 +424,7 @@ export function Settings() {
               <div className="grid gap-3 grid-cols-2">
                 <div>
                   <label className="mb-1 block text-xs text-muted-foreground">Risk Tolerance</label>
-                  <Select defaultValue="moderate">
+                  <Select value={agentConfig.riskTolerance} onValueChange={(v) => setAgentConfig(prev => ({ ...prev, riskTolerance: v }))}>
                     <SelectTrigger className="h-7 text-xs">
                       <SelectValue />
                     </SelectTrigger>
@@ -407,18 +437,18 @@ export function Settings() {
                 </div>
                 <div>
                   <label className="mb-1 block text-xs text-muted-foreground">Max Position Size</label>
-                  <Input defaultValue="10000" className="h-7 text-xs" type="number" />
+                  <Input value={agentConfig.maxPositionSize} onChange={(e) => setAgentConfig(prev => ({ ...prev, maxPositionSize: e.target.value }))} className="h-7 text-xs" type="number" />
                 </div>
                 <div>
                   <label className="mb-1 block text-xs text-muted-foreground">Daily Loss Limit</label>
-                  <Input defaultValue="2500" className="h-7 text-xs" type="number" />
+                  <Input value={agentConfig.dailyLossLimit} onChange={(e) => setAgentConfig(prev => ({ ...prev, dailyLossLimit: e.target.value }))} className="h-7 text-xs" type="number" />
                 </div>
                 <div>
                   <label className="mb-1 block text-xs text-muted-foreground">Max Open Positions</label>
-                  <Input defaultValue="10" className="h-7 text-xs" type="number" />
+                  <Input value={agentConfig.maxOpenPositions} onChange={(e) => setAgentConfig(prev => ({ ...prev, maxOpenPositions: e.target.value }))} className="h-7 text-xs" type="number" />
                 </div>
               </div>
-              <Button size="sm" className="h-7 text-xs">Save Configuration</Button>
+              <Button size="sm" className="h-7 text-xs" onClick={handleSaveAgentConfig}>Save Configuration</Button>
             </CardContent>
           </Card>
 

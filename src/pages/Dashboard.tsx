@@ -22,7 +22,16 @@ import {
 
 const SECTOR_ETFS = ['XLK', 'XLV', 'XLF', 'XLE', 'XLI', 'XLP', 'XLU', 'XLRE', 'XLC', 'XLY', 'XLB']
 
-const FEAR_GREED = 62 // mock
+function generateDailyMarketIndicators() {
+  const today = new Date()
+  const seed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate()
+  let s = seed
+  const rand = () => { s = (s * 16807 + 0) % 2147483647; return (s - 1) / 2147483646 }
+  const fearGreed = Math.round(20 + rand() * 60)
+  const vix = +(12 + rand() * 18).toFixed(1)
+  const breadth = Math.round(40 + rand() * 35)
+  return { fearGreed, vix, breadth }
+}
 
 function getFGLabel(v: number) {
   if (v >= 75) return { label: 'Extreme Greed', color: '#10b981' }
@@ -32,10 +41,19 @@ function getFGLabel(v: number) {
   return { label: 'Extreme Fear', color: '#ef4444' }
 }
 
+function getVixLabel(v: number) {
+  if (v < 12) return { label: 'Low volatility', color: 'text-emerald-500' }
+  if (v < 20) return { label: 'Normal volatility', color: 'text-muted-foreground' }
+  if (v < 30) return { label: 'Elevated volatility', color: 'text-amber-500' }
+  return { label: 'High volatility', color: 'text-red-500' }
+}
+
 export function Dashboard() {
   const { holdings, totals } = usePortfolioContext()
   const { trades } = useTradingContext()
   const [sectors, setSectors] = useState<Quote[]>([])
+
+  const { fearGreed, vix, breadth } = useMemo(() => generateDailyMarketIndicators(), [])
 
   useEffect(() => {
     fetchMultipleQuotes(SECTOR_ETFS).then(setSectors).catch(() => {})
@@ -58,7 +76,8 @@ export function Dashboard() {
     .sort((a, b) => b.timestamp - a.timestamp)
     .slice(0, 5)
 
-  const fg = getFGLabel(FEAR_GREED)
+  const fg = getFGLabel(fearGreed)
+  const vixInfo = getVixLabel(vix)
 
   return (
     <div className="space-y-4">
@@ -73,7 +92,7 @@ export function Dashboard() {
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Fear & Greed</p>
-              <p className="text-lg font-bold" style={{ color: fg.color }}>{FEAR_GREED}</p>
+              <p className="text-lg font-bold" style={{ color: fg.color }}>{fearGreed}</p>
               <p className="text-xs" style={{ color: fg.color }}>{fg.label}</p>
             </div>
           </CardContent>
@@ -85,8 +104,8 @@ export function Dashboard() {
             </div>
             <div>
               <p className="text-xs text-muted-foreground">VIX</p>
-              <p className="text-lg font-bold">18.4</p>
-              <p className="text-xs text-muted-foreground">Normal volatility</p>
+              <p className="text-lg font-bold">{vix}</p>
+              <p className={`text-xs ${vixInfo.color}`}>{vixInfo.label}</p>
             </div>
           </CardContent>
         </Card>
@@ -97,7 +116,7 @@ export function Dashboard() {
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Market Breadth</p>
-              <p className="text-lg font-bold text-emerald-500">68%</p>
+              <p className={`text-lg font-bold ${breadth >= 50 ? 'text-emerald-500' : 'text-red-500'}`}>{breadth}%</p>
               <p className="text-xs text-muted-foreground">Above 200 DMA</p>
             </div>
           </CardContent>

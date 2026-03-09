@@ -56,16 +56,23 @@ function generatePutCallHistory() {
   return points
 }
 
-const SOCIAL_SENTIMENT = [
-  { symbol: 'NVDA', bullish: 78, bearish: 12, neutral: 10, mentions: 12400, trend: 'up' as const },
-  { symbol: 'TSLA', bullish: 45, bearish: 38, neutral: 17, mentions: 9800, trend: 'down' as const },
-  { symbol: 'AAPL', bullish: 62, bearish: 18, neutral: 20, mentions: 7200, trend: 'up' as const },
-  { symbol: 'AMZN', bullish: 55, bearish: 25, neutral: 20, mentions: 5400, trend: 'up' as const },
-  { symbol: 'MSFT', bullish: 68, bearish: 14, neutral: 18, mentions: 4800, trend: 'up' as const },
-  { symbol: 'META', bullish: 51, bearish: 30, neutral: 19, mentions: 4200, trend: 'down' as const },
-  { symbol: 'AMD', bullish: 72, bearish: 15, neutral: 13, mentions: 3900, trend: 'up' as const },
-  { symbol: 'GOOGL', bullish: 58, bearish: 22, neutral: 20, mentions: 3500, trend: 'up' as const },
-]
+function generateSocialSentiment() {
+  const today = new Date()
+  const daySeed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate()
+  let s = daySeed
+  const rand = () => { s = (s * 16807 + 0) % 2147483647; return (s - 1) / 2147483646 }
+  const symbols = ['NVDA', 'TSLA', 'AAPL', 'AMZN', 'MSFT', 'META', 'AMD', 'GOOGL']
+  return symbols.map((symbol) => {
+    const bullish = Math.round(30 + rand() * 50)
+    const bearish = Math.round(5 + rand() * 35)
+    const neutral = 100 - bullish - bearish
+    const mentions = Math.round(2000 + rand() * 12000)
+    const trend = rand() > 0.4 ? 'up' as const : 'down' as const
+    return { symbol, bullish, bearish, neutral: Math.max(neutral, 0), mentions, trend }
+  })
+}
+
+const SOCIAL_SENTIMENT = generateSocialSentiment()
 
 const VIX_LEVELS = [
   { range: '0–12', label: 'Complacency', color: '#10b981' },
@@ -93,9 +100,13 @@ export function SentimentDashboard() {
 
   useEffect(() => {
     const t = setTimeout(() => {
-      setFearGreed(62)
-      setVix(18.4)
-      setPutCallRatio(0.82)
+      const today = new Date()
+      const seed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate()
+      let s = seed + 999
+      const rand = () => { s = (s * 16807 + 0) % 2147483647; return (s - 1) / 2147483646 }
+      setFearGreed(Math.round(20 + rand() * 60))
+      setVix(+(12 + rand() * 18).toFixed(1))
+      setPutCallRatio(+(0.5 + rand() * 0.8).toFixed(2))
       setLoading(false)
     }, 600)
     return () => clearTimeout(t)

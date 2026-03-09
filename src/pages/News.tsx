@@ -228,14 +228,49 @@ export function News() {
                 </button>
               </div>
             </div>
-            {/* Embedded content */}
-            <div className="flex-1 overflow-hidden">
-              <iframe
-                src={selectedArticle.url}
-                title={selectedArticle.title}
-                className="h-full w-full border-0"
-                sandbox="allow-scripts allow-same-origin"
-              />
+            {/* Article content */}
+            <div className="flex-1 overflow-auto p-6">
+              {selectedArticle.summary ? (
+                <div className="space-y-4">
+                  <p className="text-sm leading-relaxed text-foreground">{selectedArticle.summary}</p>
+                  <div className="rounded-md border border-border bg-accent/30 p-4">
+                    <p className="text-xs text-muted-foreground mb-2">To read the full article, visit the original source:</p>
+                    <a
+                      href={selectedArticle.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      Read full article at {selectedArticle.source}
+                    </a>
+                  </div>
+                  {selectedArticle.relatedSymbols.length > 0 && (
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1.5">Related symbols</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {selectedArticle.relatedSymbols.map((s) => (
+                          <Badge key={s} variant="outline" className="text-xs">{s}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <Newspaper className="mb-3 h-8 w-8 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground mb-3">Article preview not available</p>
+                  <a
+                    href={selectedArticle.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    Read at {selectedArticle.source}
+                  </a>
+                </div>
+              )}
             </div>
           </div>
         </div>

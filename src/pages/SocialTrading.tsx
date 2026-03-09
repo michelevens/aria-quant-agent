@@ -10,6 +10,22 @@ import {
   Trophy, TrendingUp, Users, Copy, Star, Search,
   BarChart3, Shield, ArrowUpDown, Eye, UserPlus, Crown, Medal, Award,
 } from 'lucide-react'
+import { toast } from 'sonner'
+
+const SOCIAL_FOLLOW_KEY = 'aria-social-following'
+const SOCIAL_COPY_KEY = 'aria-social-copying'
+
+function loadSet(key: string): Set<string> {
+  try {
+    const raw = localStorage.getItem(key)
+    if (raw) return new Set(JSON.parse(raw))
+  } catch { /* ignore */ }
+  return new Set()
+}
+
+function saveSet(key: string, set: Set<string>) {
+  localStorage.setItem(key, JSON.stringify([...set]))
+}
 
 interface Trader {
   id: string
@@ -68,8 +84,8 @@ export function SocialTrading() {
   const [sortAsc, setSortAsc] = useState(true)
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('ALL')
   const [riskFilter, setRiskFilter] = useState<RiskFilter>('All')
-  const [following, setFollowing] = useState<Set<string>>(new Set())
-  const [copying, setCopying] = useState<Set<string>>(new Set())
+  const [following, setFollowing] = useState<Set<string>>(() => loadSet(SOCIAL_FOLLOW_KEY))
+  const [copying, setCopying] = useState<Set<string>>(() => loadSet(SOCIAL_COPY_KEY))
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) setSortAsc(!sortAsc)
@@ -77,19 +93,27 @@ export function SocialTrading() {
   }
 
   const toggleFollow = (id: string) => {
+    const trader = MOCK_TRADERS.find(t => t.id === id)
     setFollowing((prev) => {
       const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
+      const wasFollowing = next.has(id)
+      if (wasFollowing) next.delete(id)
       else next.add(id)
+      saveSet(SOCIAL_FOLLOW_KEY, next)
+      toast.success(wasFollowing ? `Unfollowed ${trader?.name}` : `Now following ${trader?.name}`)
       return next
     })
   }
 
   const toggleCopy = (id: string) => {
+    const trader = MOCK_TRADERS.find(t => t.id === id)
     setCopying((prev) => {
       const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
+      const wasCopying = next.has(id)
+      if (wasCopying) next.delete(id)
       else next.add(id)
+      saveSet(SOCIAL_COPY_KEY, next)
+      toast.success(wasCopying ? `Stopped copying ${trader?.name}` : `Now copying ${trader?.name}'s trades`)
       return next
     })
   }

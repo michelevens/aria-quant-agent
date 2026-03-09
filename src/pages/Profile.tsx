@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { usePortfolioContext } from '@/contexts/PortfolioContext'
 import {
   User, Mail, Shield, Calendar, CreditCard, TrendingUp,
-  Briefcase, Clock, Award, Save,
+  Briefcase, Clock, Award, Save, CheckCircle2, Lock,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -17,6 +17,10 @@ export function Profile() {
   const { holdings, totals } = usePortfolioContext()
   const [name, setName] = useState(user?.name ?? '')
   const [email, setEmail] = useState(user?.email ?? '')
+  const [twoFaEnabled, setTwoFaEnabled] = useState(false)
+  const [showPasswordForm, setShowPasswordForm] = useState(false)
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
 
   const handleSave = () => {
     toast.success('Profile updated successfully')
@@ -159,7 +163,7 @@ export function Profile() {
                         ))}
                       </ul>
                       {!isActive && (
-                        <Button variant="outline" size="sm" className="mt-3 w-full text-xs">
+                        <Button variant="outline" size="sm" className="mt-3 w-full text-xs" onClick={() => toast.info(`Plan upgrade to ${plan.charAt(0).toUpperCase() + plan.slice(1)} is not available in demo mode`)}>
                           Upgrade
                         </Button>
                       )}
@@ -183,17 +187,53 @@ export function Profile() {
                   <p className="text-sm font-medium">Password</p>
                   <p className="text-xs text-muted-foreground">Last changed 30 days ago</p>
                 </div>
-                <Button variant="outline" size="sm" className="text-xs">
-                  Change
-                </Button>
+                {!showPasswordForm ? (
+                  <Button variant="outline" size="sm" className="text-xs" onClick={() => setShowPasswordForm(true)}>
+                    Change
+                  </Button>
+                ) : (
+                  <Button variant="ghost" size="sm" className="text-xs" onClick={() => { setShowPasswordForm(false); setCurrentPassword(''); setNewPassword('') }}>
+                    Cancel
+                  </Button>
+                )}
               </div>
+              {showPasswordForm && (
+                <div className="space-y-2 rounded-md border p-3">
+                  <div>
+                    <label className="mb-1 block text-xs text-muted-foreground">Current Password</label>
+                    <Input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="h-8 text-sm" placeholder="Enter current password" />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs text-muted-foreground">New Password</label>
+                    <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="h-8 text-sm" placeholder="Enter new password" />
+                  </div>
+                  <Button size="sm" className="gap-1 text-xs" onClick={() => {
+                    if (!currentPassword || !newPassword) { toast.error('Please fill in both fields'); return }
+                    if (newPassword.length < 6) { toast.error('Password must be at least 6 characters'); return }
+                    toast.success('Password changed successfully')
+                    setShowPasswordForm(false); setCurrentPassword(''); setNewPassword('')
+                  }}>
+                    <Lock className="h-3 w-3" /> Update Password
+                  </Button>
+                </div>
+              )}
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium">Two-Factor Authentication</p>
-                  <p className="text-xs text-muted-foreground">Add extra security to your account</p>
+                  <p className="text-xs text-muted-foreground">
+                    {twoFaEnabled ? 'Two-factor authentication is active' : 'Add extra security to your account'}
+                  </p>
                 </div>
-                <Button variant="outline" size="sm" className="text-xs">
-                  Enable
+                <Button
+                  variant={twoFaEnabled ? 'default' : 'outline'}
+                  size="sm"
+                  className="gap-1 text-xs"
+                  onClick={() => {
+                    setTwoFaEnabled(!twoFaEnabled)
+                    toast.success(twoFaEnabled ? 'Two-factor authentication disabled' : 'Two-factor authentication enabled')
+                  }}
+                >
+                  {twoFaEnabled ? <><CheckCircle2 className="h-3 w-3" /> Enabled</> : 'Enable'}
                 </Button>
               </div>
               <div className="flex items-center justify-between">
@@ -204,9 +244,9 @@ export function Profile() {
                     1 active session
                   </p>
                 </div>
-                <Button variant="outline" size="sm" className="text-xs">
+                <Button variant="outline" size="sm" className="text-xs" onClick={() => toast.success('All other sessions have been revoked')}>
                   <CreditCard className="mr-1 h-3.5 w-3.5" />
-                  Manage
+                  Revoke Others
                 </Button>
               </div>
             </CardContent>

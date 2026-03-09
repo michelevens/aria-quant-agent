@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -150,6 +151,7 @@ function ConditionRow({
 }
 
 export function StrategyBuilder() {
+  const navigate = useNavigate()
   const [strategies, setStrategies] = useState<Strategy[]>(loadStrategies)
   const [active, setActive] = useState<Strategy>(strategies[0] ?? newStrategy())
 
@@ -215,7 +217,7 @@ export function StrategyBuilder() {
             <Save className="h-3.5 w-3.5" />
             Save
           </Button>
-          <Button size="sm" className="gap-1 text-xs">
+          <Button size="sm" className="gap-1 text-xs" onClick={() => { save(); navigate('/backtest') }}>
             <Play className="h-3.5 w-3.5" />
             Backtest
           </Button>

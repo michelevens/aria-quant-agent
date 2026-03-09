@@ -208,6 +208,7 @@ export function TopBar() {
         {/* Quick-access nav icons */}
         <div className="hidden items-center gap-0.5 md:flex">
           <NavIcon to="/crypto" icon={Coins} label="Crypto" />
+          <NavIcon to="/screener" icon={Layers} label="Screener" />
           <NavIcon to="/options-flow" icon={Zap} label="Options Flow" />
           <NavIcon to="/social" icon={Users} label="Social Trading" />
           <NavIcon to="/learn" icon={GraduationCap} label="Learn" />
