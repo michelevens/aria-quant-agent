@@ -42,7 +42,7 @@ export function Login() {
 
   const handleDemo = async () => {
     setLoading(true)
-    await login('demo@ariaquant.com', 'demo123')
+    await login('demo@ariaquant.com', 'demo1234')
     setLoading(false)
     navigate('/')
   }
