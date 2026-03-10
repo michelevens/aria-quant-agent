@@ -7,7 +7,6 @@ use App\Mail\WelcomeEmail;
 use App\Models\PortfolioBalance;
 use App\Models\User;
 use Illuminate\Auth\Events\PasswordReset;
-use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -35,9 +34,11 @@ class AuthController extends Controller
 
         PortfolioBalance::create(['user_id' => $user->id, 'cash' => 100000]);
 
-        event(new Registered($user));
-
-        Mail::to($user)->send(new WelcomeEmail($user));
+        try {
+            Mail::to($user)->send(new WelcomeEmail($user));
+        } catch (\Throwable) {
+            // Mail not configured yet — silently skip
+        }
 
         $token = $user->createToken('spa')->plainTextToken;
 
