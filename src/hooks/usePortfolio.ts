@@ -94,9 +94,9 @@ export function usePortfolio() {
       .then((res) => {
         if (res.holdings.length > 0) {
           setState((prev) => ({
-            holdings: res.holdings.map((h) => ({ symbol: h.symbol, quantity: h.quantity, avgCost: h.avg_cost })),
+            holdings: res.holdings.map((h) => ({ symbol: h.symbol, quantity: Number(h.quantity), avgCost: Number(h.avg_cost) })),
             watchlist: prev.watchlist,
-            cash: res.cash,
+            cash: Number(res.cash),
           }))
         }
         setApiSynced(true)
