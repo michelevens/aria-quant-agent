@@ -87,5 +87,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/orders', [AdminController::class, 'orders']);
         Route::get('/alerts', [AdminController::class, 'alerts']);
         Route::post('/announce', [AdminController::class, 'announce']);
+        Route::post('/seed-demo', [AdminController::class, 'seedDemo']);
     });
 });

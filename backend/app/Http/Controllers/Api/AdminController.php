@@ -10,6 +10,7 @@ use App\Models\Trade;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
@@ -201,6 +202,19 @@ class AdminController extends Controller
 
         return response()->json([
             'message' => "Announcement sent to {$count} users",
+        ]);
+    }
+
+    /**
+     * Seed demo data for all users
+     */
+    public function seedDemo(): JsonResponse
+    {
+        Artisan::call('db:seed', ['--class' => 'DemoDataSeeder', '--force' => true]);
+
+        return response()->json([
+            'message' => 'Demo data seeded successfully',
+            'output' => trim(Artisan::output()),
         ]);
     }
 }
