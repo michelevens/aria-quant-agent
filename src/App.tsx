@@ -139,7 +139,7 @@ function AuthGate() {
 
 function App() {
   return (
-    <BrowserRouter basename="/aria-quant-agent">
+    <BrowserRouter basename="/">
       <ErrorBoundary>
       <ThemeProvider>
       <TooltipProvider>

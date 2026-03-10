@@ -19,8 +19,8 @@ export default defineConfig({
         background_color: '#0f172a',
         display: 'standalone',
         orientation: 'portrait',
-        scope: '/aria-quant-agent/',
-        start_url: '/aria-quant-agent/',
+        scope: '/',
+        start_url: '/',
         icons: [
           {
             src: 'icon-192.svg',
@@ -56,7 +56,7 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
-  base: '/aria-quant-agent/',
+  base: '/',
   build: {
     rollupOptions: {
       output: {
