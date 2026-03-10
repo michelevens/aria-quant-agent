@@ -1,1 +1,0 @@
-import{l as o}from"./index-tgFlp9jp.js";const c=[["path",{d:"M20 6 9 17l-5-5",key:"1gmf2c"}]],s=o("check",c);const n=[["path",{d:"m6 9 6 6 6-6",key:"qrunsl"}]],a=o("chevron-down",n);const e=[["path",{d:"m18 15-6-6-6 6",key:"153udz"}]],d=o("chevron-up",e);export{d as C,a,s as b};
