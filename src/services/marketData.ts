@@ -1,11 +1,6 @@
 import type { OHLCV, Quote, NewsItem, TimeRange, Interval } from '@/types/market'
 
-const PROXY = 'https://corsproxy.io/?url='
-const YAHOO_BASE = 'https://query1.finance.yahoo.com'
-
-function buildYahooUrl(path: string): string {
-  return `${PROXY}${encodeURIComponent(`${YAHOO_BASE}${path}`)}`
-}
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
 
 function rangeToParams(range: TimeRange): { range: string; interval: Interval } {
   const map: Record<TimeRange, { range: string; interval: Interval }> = {
@@ -27,9 +22,7 @@ export async function fetchHistoricalData(
   timeRange: TimeRange = '1Y'
 ): Promise<OHLCV[]> {
   const { range, interval } = rangeToParams(timeRange)
-  const url = buildYahooUrl(
-    `/v8/finance/chart/${symbol}?range=${range}&interval=${interval}&includePrePost=false`
-  )
+  const url = `${API_BASE}/market/chart?symbol=${encodeURIComponent(symbol)}&range=${range}&interval=${interval}`
 
   const res = await fetch(url)
   if (!res.ok) throw new Error(`Failed to fetch ${symbol}: ${res.status}`)
@@ -97,9 +90,7 @@ function parseChartToQuote(json: Record<string, unknown>, symbol: string): Quote
 }
 
 export async function fetchQuote(symbol: string): Promise<Quote> {
-  const url = buildYahooUrl(
-    `/v8/finance/chart/${symbol}?range=1d&interval=5m&includePrePost=false`
-  )
+  const url = `${API_BASE}/market/chart?symbol=${encodeURIComponent(symbol)}&range=1d&interval=5m`
 
   const res = await fetch(url)
   if (!res.ok) throw new Error(`Failed to fetch quote for ${symbol}`)
@@ -157,7 +148,7 @@ function guessSentiment(title: string): 'bullish' | 'bearish' | 'neutral' {
 
 export async function fetchNews(symbols: string[] = []): Promise<NewsItem[]> {
   const query = symbols.length > 0 ? symbols.slice(0, 5).join(',') : 'stock market'
-  const url = `${PROXY}${encodeURIComponent(`https://query1.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(query)}&newsCount=20&quotesCount=0`)}`
+  const url = `${API_BASE}/market/search?q=${encodeURIComponent(query)}`
 
   const res = await fetch(url)
   if (!res.ok) throw new Error('Failed to fetch news')

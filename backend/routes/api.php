@@ -22,6 +22,8 @@ Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 // Public market data
 Route::get('/market/fear-greed', [MarketDataController::class, 'fearGreed']);
 Route::get('/market/ipos', [MarketDataController::class, 'ipos']);
+Route::get('/market/chart', [MarketDataController::class, 'yahooChart']);
+Route::get('/market/search', [MarketDataController::class, 'yahooSearch']);
 
 // Authenticated routes
 Route::middleware('auth:sanctum')->group(function () {
