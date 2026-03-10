@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\AlertController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\JournalController;
@@ -73,4 +74,18 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::post('/notifications/read', [NotificationController::class, 'markRead']);
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead']);
+
+    // Admin routes
+    Route::middleware('admin')->prefix('admin')->group(function () {
+        Route::get('/dashboard', [AdminController::class, 'dashboard']);
+        Route::get('/users', [AdminController::class, 'users']);
+        Route::get('/users/{user}', [AdminController::class, 'user']);
+        Route::put('/users/{user}', [AdminController::class, 'updateUser']);
+        Route::post('/users/{user}/ban', [AdminController::class, 'banUser']);
+        Route::post('/users/{user}/unban', [AdminController::class, 'unbanUser']);
+        Route::delete('/users/{user}', [AdminController::class, 'deleteUser']);
+        Route::get('/orders', [AdminController::class, 'orders']);
+        Route::get('/alerts', [AdminController::class, 'alerts']);
+        Route::post('/announce', [AdminController::class, 'announce']);
+    });
 });

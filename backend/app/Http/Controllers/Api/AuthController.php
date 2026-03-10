@@ -157,6 +157,7 @@ class AuthController extends Controller
             'email' => $user->email,
             'avatar' => $user->avatar,
             'plan' => $user->plan,
+            'role' => $user->role,
             'theme' => $user->theme,
             'email_verified' => $user->hasVerifiedEmail(),
             'joined_at' => $user->created_at->toISOString(),
