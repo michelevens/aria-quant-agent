@@ -21,7 +21,7 @@ COPY composer.json composer.lock ./
 RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist
 
 # Copy application code
-ARG CACHEBUST=2
+ARG CACHEBUST=3
 COPY . .
 
 # Complete composer install
