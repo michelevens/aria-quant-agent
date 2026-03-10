@@ -1,5 +1,7 @@
-import { createContext, useContext, useState, useCallback } from 'react'
+import { createContext, useContext, useState, useCallback, useEffect } from 'react'
 import type { ReactNode } from 'react'
+import { auth as authApi, setToken, getToken } from '@/services/api'
+import type { ApiUser } from '@/services/api'
 
 export interface User {
   id: string
@@ -13,25 +15,26 @@ export interface User {
 interface AuthState {
   user: User | null
   isAuthenticated: boolean
+  loading: boolean
   login: (email: string, password: string) => Promise<boolean>
   register: (name: string, email: string, password: string) => Promise<boolean>
   logout: () => void
+  forgotPassword: (email: string) => Promise<string>
+  resetPassword: (data: { token: string; email: string; password: string; password_confirmation: string }) => Promise<string>
+  updateProfile: (data: Partial<{ name: string; avatar: string; theme: string }>) => Promise<void>
 }
 
 const AUTH_KEY = 'aria-quant-auth'
 
-const DEMO_USERS: Record<string, { password: string; user: User }> = {
-  'demo@ariaquant.com': {
-    password: 'demo123',
-    user: {
-      id: 'usr_demo_001',
-      email: 'demo@ariaquant.com',
-      name: 'Demo Trader',
-      avatar: 'DT',
-      plan: 'pro',
-      joinedAt: '2024-01-15',
-    },
-  },
+function apiUserToLocal(u: ApiUser): User {
+  return {
+    id: String(u.id),
+    email: u.email,
+    name: u.name,
+    avatar: u.avatar || u.name.substring(0, 2).toUpperCase(),
+    plan: u.plan,
+    joinedAt: u.joined_at,
+  }
 }
 
 function loadAuth(): User | null {
@@ -46,55 +49,100 @@ const AuthContext = createContext<AuthState | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(loadAuth)
+  const [loading, setLoading] = useState(!!getToken())
+
+  // On mount, if we have a token, validate it
+  useEffect(() => {
+    const token = getToken()
+    if (!token) {
+      setLoading(false)
+      return
+    }
+
+    authApi.me()
+      .then((res) => {
+        const u = apiUserToLocal(res.user)
+        setUser(u)
+        localStorage.setItem(AUTH_KEY, JSON.stringify(u))
+      })
+      .catch(() => {
+        // Token invalid — clear auth
+        setToken(null)
+        setUser(null)
+        localStorage.removeItem(AUTH_KEY)
+      })
+      .finally(() => setLoading(false))
+  }, [])
+
+  // Listen for forced logout (401 from API)
+  useEffect(() => {
+    const handler = () => {
+      setUser(null)
+      localStorage.removeItem(AUTH_KEY)
+    }
+    window.addEventListener('auth:logout', handler)
+    return () => window.removeEventListener('auth:logout', handler)
+  }, [])
 
   const login = useCallback(async (email: string, password: string): Promise<boolean> => {
-    // Simulate network delay
-    await new Promise((r) => setTimeout(r, 800))
-
-    const entry = DEMO_USERS[email.toLowerCase()]
-    if (entry && entry.password === password) {
-      setUser(entry.user)
-      localStorage.setItem(AUTH_KEY, JSON.stringify(entry.user))
+    try {
+      const res = await authApi.login({ email, password })
+      const u = apiUserToLocal(res.user)
+      setUser(u)
+      localStorage.setItem(AUTH_KEY, JSON.stringify(u))
       return true
+    } catch {
+      return false
     }
-
-    // Accept any email/password for demo — create user on the fly
-    const newUser: User = {
-      id: `usr_${Date.now()}`,
-      email: email.toLowerCase(),
-      name: email.split('@')[0],
-      avatar: email.substring(0, 2).toUpperCase(),
-      plan: 'free',
-      joinedAt: new Date().toISOString().split('T')[0],
-    }
-    setUser(newUser)
-    localStorage.setItem(AUTH_KEY, JSON.stringify(newUser))
-    return true
   }, [])
 
-  const register = useCallback(async (name: string, email: string, _password: string): Promise<boolean> => {
-    await new Promise((r) => setTimeout(r, 800))
-
-    const newUser: User = {
-      id: `usr_${Date.now()}`,
-      email: email.toLowerCase(),
-      name,
-      avatar: name.substring(0, 2).toUpperCase(),
-      plan: 'free',
-      joinedAt: new Date().toISOString().split('T')[0],
+  const register = useCallback(async (name: string, email: string, password: string): Promise<boolean> => {
+    try {
+      const res = await authApi.register({
+        name,
+        email,
+        password,
+        password_confirmation: password,
+      })
+      const u = apiUserToLocal(res.user)
+      setUser(u)
+      localStorage.setItem(AUTH_KEY, JSON.stringify(u))
+      return true
+    } catch {
+      return false
     }
-    setUser(newUser)
-    localStorage.setItem(AUTH_KEY, JSON.stringify(newUser))
-    return true
   }, [])
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    try {
+      await authApi.logout()
+    } catch { /* ignore */ }
     setUser(null)
     localStorage.removeItem(AUTH_KEY)
   }, [])
 
+  const forgotPassword = useCallback(async (email: string): Promise<string> => {
+    const res = await authApi.forgotPassword(email)
+    return res.message
+  }, [])
+
+  const resetPassword = useCallback(async (data: { token: string; email: string; password: string; password_confirmation: string }): Promise<string> => {
+    const res = await authApi.resetPassword(data)
+    return res.message
+  }, [])
+
+  const updateProfile = useCallback(async (data: Partial<{ name: string; avatar: string; theme: string }>) => {
+    const res = await authApi.updateProfile(data)
+    const u = apiUserToLocal(res.user)
+    setUser(u)
+    localStorage.setItem(AUTH_KEY, JSON.stringify(u))
+  }, [])
+
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, register, logout }}>
+    <AuthContext.Provider value={{
+      user, isAuthenticated: !!user, loading,
+      login, register, logout, forgotPassword, resetPassword, updateProfile,
+    }}>
       {children}
     </AuthContext.Provider>
   )

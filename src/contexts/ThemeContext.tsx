@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import type { ReactNode } from 'react'
+import { auth as authApi, getToken } from '@/services/api'
 
 type Theme = 'dark' | 'light' | 'system'
 
@@ -35,6 +36,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const setTheme = useCallback((t: Theme) => {
     setThemeState(t)
     localStorage.setItem(THEME_KEY, t)
+
+    // Sync to API if authenticated
+    if (getToken()) {
+      authApi.updateProfile({ theme: t }).catch(() => { /* ignore */ })
+    }
   }, [])
 
   useEffect(() => {

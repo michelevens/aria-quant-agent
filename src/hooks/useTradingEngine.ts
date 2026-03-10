@@ -7,6 +7,7 @@ import {
   type PlaceOrderParams,
   type AlpacaOrder,
 } from '@/services/alpaca'
+import { orders as ordersApi, getToken } from '@/services/api'
 
 export type OrderSide = 'BUY' | 'SELL'
 export type OrderType = 'MARKET' | 'LIMIT' | 'STOP' | 'STOP_LIMIT' | 'TRAILING_STOP' | 'OCO' | 'BRACKET'
@@ -105,6 +106,45 @@ export function useTradingEngine() {
 
   useEffect(() => { saveTradingState(state) }, [state])
 
+  // Load orders from API on mount
+  useEffect(() => {
+    if (!getToken()) return
+    Promise.all([ordersApi.list(), ordersApi.trades()])
+      .then(([ordersRes, tradesRes]) => {
+        if (ordersRes.orders.length > 0 || tradesRes.trades.length > 0) {
+          setState({
+            orders: ordersRes.orders.map((o) => ({
+              id: String(o.id),
+              symbol: o.symbol,
+              side: o.side,
+              type: o.type as OrderType,
+              quantity: o.quantity,
+              limitPrice: o.limit_price ?? undefined,
+              stopPrice: o.stop_price ?? undefined,
+              tif: o.tif as TimeInForce,
+              status: o.status as OrderStatus,
+              filledQty: o.filled_qty,
+              filledPrice: o.filled_price,
+              pnl: o.pnl ?? undefined,
+              filledAt: o.filled_at ? new Date(o.filled_at).getTime() : undefined,
+              createdAt: new Date(o.created_at).getTime(),
+            })),
+            trades: tradesRes.trades.map((t) => ({
+              id: String(t.id),
+              orderId: String(t.order_id ?? ''),
+              symbol: t.symbol,
+              side: t.side,
+              quantity: t.quantity,
+              price: t.price,
+              total: t.total,
+              timestamp: new Date(t.created_at).getTime(),
+            })),
+          })
+        }
+      })
+      .catch(() => { /* fall back to localStorage */ })
+  }, [])
+
   // Sync orders from Alpaca
   const syncAlpacaOrders = useCallback(async () => {
     if (!isAlpacaConnected()) return
@@ -170,12 +210,10 @@ export function useTradingEngine() {
         orderParams.stop_loss = { stop_price: bracketStopLoss }
       }
 
-      // Fire and forget — async order placement, then sync
       placeAlpacaOrder(orderParams)
         .then(() => { syncAlpacaOrders() })
         .catch((err) => { console.error('Alpaca order failed:', err) })
 
-      // Return an optimistic local order (will be replaced by sync)
       const optimistic: Order = {
         id: `ALPACA-PENDING-${Date.now()}`,
         symbol, side, type, quantity, limitPrice, stopPrice, tif,
@@ -187,17 +225,22 @@ export function useTradingEngine() {
 
     const order: Order = {
       id: `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`,
-      symbol,
-      side,
-      type,
-      quantity,
-      limitPrice,
-      stopPrice,
-      tif,
-      status: 'OPEN',
-      filledQty: 0,
-      filledPrice: 0,
-      createdAt: Date.now(),
+      symbol, side, type, quantity, limitPrice, stopPrice, tif,
+      status: 'OPEN', filledQty: 0, filledPrice: 0, createdAt: Date.now(),
+    }
+
+    // Sync to API
+    if (getToken()) {
+      ordersApi.create({
+        symbol, side, type, quantity,
+        limit_price: limitPrice,
+        stop_price: stopPrice,
+        trail_amount: trailAmount,
+        trail_percent: trailPercent,
+        bracket_take_profit: bracketTakeProfit,
+        bracket_stop_loss: bracketStopLoss,
+        tif,
+      }).catch(() => { /* ignore */ })
     }
 
     // Market orders fill immediately at current price
@@ -210,9 +253,7 @@ export function useTradingEngine() {
       const trade: TradeRecord = {
         id: `TRD-${Date.now()}`,
         orderId: order.id,
-        symbol,
-        side,
-        quantity,
+        symbol, side, quantity,
         price: currentPrice,
         total: currentPrice * quantity,
         timestamp: Date.now(),
@@ -223,7 +264,6 @@ export function useTradingEngine() {
         trades: [trade, ...prev.trades],
       }))
     } else if (type === 'LIMIT') {
-      // Check if limit is already met
       const canFill = side === 'BUY'
         ? currentPrice <= (limitPrice ?? Infinity)
         : currentPrice >= (limitPrice ?? 0)
@@ -237,9 +277,7 @@ export function useTradingEngine() {
         const trade: TradeRecord = {
           id: `TRD-${Date.now()}`,
           orderId: order.id,
-          symbol,
-          side,
-          quantity,
+          symbol, side, quantity,
           price: limitPrice ?? currentPrice,
           total: (limitPrice ?? currentPrice) * quantity,
           timestamp: Date.now(),
@@ -256,7 +294,6 @@ export function useTradingEngine() {
         }))
       }
     } else if (type === 'BRACKET') {
-      // Bracket: fill entry at market, create TP and SL child orders
       order.status = 'FILLED'
       order.filledQty = quantity
       order.filledPrice = currentPrice
@@ -296,7 +333,6 @@ export function useTradingEngine() {
         trades: [trade, ...prev.trades],
       }))
     } else if (type === 'OCO') {
-      // OCO: two linked orders, filling one cancels the other
       order.limitPrice = limitPrice
       order.stopPrice = stopPrice
       order.linkedOrderId = `ORD-${Date.now()}-OCO2`
@@ -317,7 +353,6 @@ export function useTradingEngine() {
     } else if (type === 'TRAILING_STOP') {
       order.trailAmount = trailAmount
       order.trailPercent = trailPercent
-      // Calculate initial stop from current price
       const trail = trailAmount ?? (trailPercent ? currentPrice * trailPercent / 100 : 0)
       order.stopPrice = side === 'SELL' ? currentPrice - trail : currentPrice + trail
 
@@ -326,7 +361,6 @@ export function useTradingEngine() {
         orders: [order, ...prev.orders],
       }))
     } else {
-      // STOP and STOP_LIMIT stay open
       setState((prev) => ({
         ...prev,
         orders: [order, ...prev.orders],
@@ -337,12 +371,18 @@ export function useTradingEngine() {
   }, [])
 
   const cancelOrder = useCallback((orderId: string) => {
-    // Cancel on Alpaca if connected and it's an Alpaca order (UUID format)
     if (isAlpacaConnected() && !orderId.startsWith('ORD-')) {
       cancelAlpacaOrder(orderId)
         .then(() => { syncAlpacaOrders() })
         .catch((err) => { console.error('Alpaca cancel failed:', err) })
     }
+
+    // Cancel on API
+    if (getToken()) {
+      const numId = parseInt(orderId)
+      if (!isNaN(numId)) ordersApi.cancel(numId).catch(() => { /* ignore */ })
+    }
+
     setState((prev) => ({
       ...prev,
       orders: prev.orders.map((o) =>
@@ -408,7 +448,6 @@ export function useTradingEngine() {
 
       if (!changed) return prev
 
-      // Cancel linked orders (OCO / bracket)
       const filledIds = new Set(orders.filter((o) => o.status === 'FILLED' && o.filledAt).map((o) => o.id))
       const cancelledLinked = orders.map((o) => {
         if (o.status === 'OPEN' && o.linkedOrderId && filledIds.has(o.linkedOrderId)) {

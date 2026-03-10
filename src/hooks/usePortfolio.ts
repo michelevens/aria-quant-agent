@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import type { Quote } from '@/types/market'
 import { fetchMultipleQuotes } from '@/services/marketData'
 import { isAlpacaConnected, fetchAccount, fetchPositions } from '@/services/alpaca'
+import { portfolio as portfolioApi, watchlists as watchlistsApi, getToken } from '@/services/api'
 
 export interface HoldingInput {
   symbol: string
@@ -69,9 +70,55 @@ export function usePortfolio() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [alpacaSynced, setAlpacaSynced] = useState(false)
+  const [apiSynced, setApiSynced] = useState(false)
 
-  // Persist state changes
-  useEffect(() => { saveState(state) }, [state])
+  // Persist state changes to localStorage + API
+  useEffect(() => {
+    saveState(state)
+
+    // Debounced API sync when authenticated
+    if (!getToken() || !apiSynced) return
+    const timer = setTimeout(() => {
+      portfolioApi.sync(
+        state.holdings.map((h) => ({ symbol: h.symbol, quantity: h.quantity, avg_cost: h.avgCost })),
+        state.cash
+      ).catch(() => { /* ignore sync errors */ })
+    }, 2000)
+    return () => clearTimeout(timer)
+  }, [state, apiSynced])
+
+  // Load portfolio from API on mount when authenticated
+  useEffect(() => {
+    if (!getToken()) return
+    portfolioApi.get()
+      .then((res) => {
+        if (res.holdings.length > 0) {
+          setState((prev) => ({
+            holdings: res.holdings.map((h) => ({ symbol: h.symbol, quantity: h.quantity, avgCost: h.avg_cost })),
+            watchlist: prev.watchlist,
+            cash: res.cash,
+          }))
+        }
+        setApiSynced(true)
+      })
+      .catch(() => { setApiSynced(true) })
+  }, [])
+
+  // Load watchlist from API
+  useEffect(() => {
+    if (!getToken()) return
+    watchlistsApi.list()
+      .then((res) => {
+        const defaultWl = res.watchlists.find((w) => w.category === 'stocks')
+        if (defaultWl && defaultWl.items.length > 0) {
+          setState((prev) => ({
+            ...prev,
+            watchlist: defaultWl.items.map((i) => i.symbol),
+          }))
+        }
+      })
+      .catch(() => { /* ignore */ })
+  }, [])
 
   // Sync holdings and cash from Alpaca when connected
   const syncAlpacaPortfolio = useCallback(async () => {

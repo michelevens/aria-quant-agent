@@ -8,6 +8,7 @@ import { usePortfolioContext } from './PortfolioContext'
 import { fetchNews } from '@/services/marketData'
 import { fetchHistoricalData } from '@/services/marketData'
 import { computeIndicators } from '@/lib/analytics/technicals'
+import { alerts as alertsApi, workflows as workflowsApi, getToken } from '@/services/api'
 import { toast } from 'sonner'
 import type { Notification } from '@/components/trading/NotificationCenter'
 
@@ -110,7 +111,31 @@ export function AlertProvider({ children }: { children: React.ReactNode }) {
   const lastNewsCheckRef = useRef(0)
   const lastTechCheckRef = useRef(0)
 
-  // Persist
+  // Load alerts from API on mount
+  useEffect(() => {
+    if (!getToken()) return
+    alertsApi.list()
+      .then((res) => {
+        if (res.alerts.length > 0) {
+          const mapped: Alert[] = res.alerts.map((a) => ({
+            id: String(a.id),
+            name: a.name,
+            category: a.category as Alert['category'],
+            status: a.status as Alert['status'],
+            createdAt: new Date(a.created_at).getTime(),
+            triggeredAt: a.triggered_at ? new Date(a.triggered_at).getTime() : undefined,
+            recurring: a.recurring,
+            cooldownMs: a.cooldown_ms,
+            triggerCount: a.trigger_count,
+            ...(a.config as Record<string, unknown>),
+          })) as Alert[]
+          setAlerts(mapped)
+        }
+      })
+      .catch(() => { /* fall back to localStorage */ })
+  }, [])
+
+  // Persist locally
   useEffect(() => { localStorage.setItem(ALERTS_KEY, JSON.stringify(alerts)) }, [alerts])
   useEffect(() => { localStorage.setItem(WORKFLOWS_KEY, JSON.stringify(workflows)) }, [workflows])
   useEffect(() => {
@@ -154,7 +179,6 @@ export function AlertProvider({ children }: { children: React.ReactNode }) {
     notificationBus.emit(notif)
     toast(alertNotif.alertName, { description: alertNotif.message })
 
-    // Browser notification
     if ('Notification' in window && window.Notification.permission === 'granted') {
       new window.Notification(`Aria Quant: ${alertNotif.alertName}`, { body: alertNotif.message })
     }
@@ -227,7 +251,6 @@ export function AlertProvider({ children }: { children: React.ReactNode }) {
           }
         }
 
-        // Create notification
         const notif: AlertNotification = {
           alertId: alert.id,
           alertName: alert.name,
@@ -239,12 +262,10 @@ export function AlertProvider({ children }: { children: React.ReactNode }) {
         emitNotification(notif)
         setHistory((prev) => [notif, ...prev].slice(0, 200))
 
-        // Execute workflows
         const matchingWorkflows = workflows.filter((w) => w.enabled && w.triggerAlertId === alert.id)
         for (const wf of matchingWorkflows) {
-          // We can't directly call portfolio actions here, so we use the notification bus
           executeWorkflow(wf, notif, quotesMapRef.current, {
-            addToWatchlist: () => {},  // These get wired through the context consumer
+            addToWatchlist: () => {},
             removeFromWatchlist: () => {},
             addAlert: () => {},
             logJournal: (note) => {
@@ -268,7 +289,6 @@ export function AlertProvider({ children }: { children: React.ReactNode }) {
       return updated
     })
 
-    // Update previous indicator values for crossover detection
     const newPrev = new Map(prevIndicatorsRef.current)
     for (const [sym, ind] of indicatorCache) {
       newPrev.set(sym, {
@@ -289,7 +309,6 @@ export function AlertProvider({ children }: { children: React.ReactNode }) {
     const interval = setInterval(() => {
       const now = Date.now()
 
-      // Fetch news every 5 minutes for sentiment alerts
       if (now - lastNewsCheckRef.current > 300000) {
         const sentimentSymbols = alerts
           .filter((a) => a.status === 'active' && a.category === 'sentiment')
@@ -300,13 +319,11 @@ export function AlertProvider({ children }: { children: React.ReactNode }) {
         lastNewsCheckRef.current = now
       }
 
-      // Fetch indicators every 60 seconds
       if (now - lastTechCheckRef.current > 60000) {
         fetchIndicators()
         lastTechCheckRef.current = now
       }
 
-      // Run evaluation every 10 seconds
       runEvaluation()
     }, 10000)
 
@@ -329,6 +346,18 @@ export function AlertProvider({ children }: { children: React.ReactNode }) {
     } as Alert
     setAlerts((prev) => [alert, ...prev])
 
+    // Sync to API
+    if (getToken()) {
+      alertsApi.create({
+        name,
+        category: rest.category,
+        config: rest as unknown as Record<string, unknown>,
+        recurring,
+        cooldown_ms: cooldownMs,
+        expires_at: expiresAt ? new Date(expiresAt).toISOString() : undefined,
+      }).catch(() => { /* ignore */ })
+    }
+
     if ('Notification' in window && window.Notification.permission === 'default') {
       window.Notification.requestPermission()
     }
@@ -338,14 +367,26 @@ export function AlertProvider({ children }: { children: React.ReactNode }) {
 
   const removeAlert = useCallback((id: string) => {
     setAlerts((prev) => prev.filter((a) => a.id !== id))
+    if (getToken()) {
+      const numId = parseInt(id)
+      if (!isNaN(numId)) alertsApi.destroy(numId).catch(() => { /* ignore */ })
+    }
   }, [])
 
   const pauseAlert = useCallback((id: string) => {
     setAlerts((prev) => prev.map((a) => a.id === id ? { ...a, status: 'paused' as const } : a))
+    if (getToken()) {
+      const numId = parseInt(id)
+      if (!isNaN(numId)) alertsApi.update(numId, { status: 'paused' }).catch(() => { /* ignore */ })
+    }
   }, [])
 
   const resumeAlert = useCallback((id: string) => {
     setAlerts((prev) => prev.map((a) => a.id === id ? { ...a, status: 'active' as const } : a))
+    if (getToken()) {
+      const numId = parseInt(id)
+      if (!isNaN(numId)) alertsApi.update(numId, { status: 'active' }).catch(() => { /* ignore */ })
+    }
   }, [])
 
   const clearTriggered = useCallback(() => {
@@ -360,6 +401,10 @@ export function AlertProvider({ children }: { children: React.ReactNode }) {
 
   const removeWorkflow = useCallback((id: string) => {
     setWorkflows((prev) => prev.filter((w) => w.id !== id))
+    if (getToken()) {
+      const numId = parseInt(id)
+      if (!isNaN(numId)) workflowsApi.destroy(numId).catch(() => { /* ignore */ })
+    }
   }, [])
 
   const toggleWorkflow = useCallback((id: string) => {
